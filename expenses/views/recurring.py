@@ -215,7 +215,7 @@ class RecurringTransactionCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.profile.can_add_recurring():
+        if request.user.is_authenticated and not request.user.profile.can_add_recurring():
             messages.error(request, _("Subscription limit reached. Please upgrade."))
             return redirect('pricing')
         return super().dispatch(request, *args, **kwargs)
@@ -262,6 +262,8 @@ class RecurringTransactionUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'expenses/recurring_transaction_form.html'
     success_url = reverse_lazy('recurring-list')
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
         obj = self.get_object()
         if request.user.profile.is_recurring_locked(obj):
             messages.error(request, _("This subscription is locked."))

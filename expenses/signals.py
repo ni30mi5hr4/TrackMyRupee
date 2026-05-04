@@ -9,52 +9,48 @@ from .models import Category, UserProfile
 logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    """Create a UserProfile for every new user."""
+def handle_user_post_save(sender, instance, created, **kwargs):
+    """Unified handler for User post_save to reduce redundant queries during signup."""
     if created:
+        # 1. Create UserProfile
         UserProfile.objects.get_or_create(user=instance)
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    """Ensure UserProfile is saved when User is saved."""
-    if hasattr(instance, 'profile'):
-        instance.profile.save()
-    else:
-        UserProfile.objects.get_or_create(user=instance)
-
-@receiver(post_save, sender=User)
-def create_default_categories(sender, instance, created, **kwargs):
-    if created:
+        
+        # 2. Create Default Categories using bulk_create to avoid N+1
         default_categories = [
             ('Food', 'bi-cup-hot'),
             ('Shopping', 'bi-cart3'),
             ('Bills', 'bi-receipt'),
         ]
-        for name, icon in default_categories:
-            Category.objects.get_or_create(user=instance, name=name, defaults={'icon': icon})
+        Category.objects.bulk_create([
+            Category(user=instance, name=name, icon=icon) 
+            for name, icon in default_categories
+        ], ignore_conflicts=True)
+        
+        # 3. Send welcome email (skip demo user)
+        if instance.email and instance.username != 'demo':
+            try:
+                from django.conf import settings
+                from django.core.mail import send_mail
+                from django.template.loader import render_to_string
 
-@receiver(post_save, sender=User)
-def send_welcome_email(sender, instance, created, **kwargs):
-    """Send welcome email to new users (skip demo user)."""
-    if created and instance.email and instance.username != 'demo':
-        try:
-            from django.conf import settings
-            from django.core.mail import send_mail
-            from django.template.loader import render_to_string
+                html_message = render_to_string('email/welcome_email.html', {
+                    'user': instance,
+                })
 
-            html_message = render_to_string('email/welcome_email.html', {
-                'user': instance,
-            })
-
-            send_mail(
-                subject='Welcome to TrackMyRupee! 🎉',
-                message='Welcome to TrackMyRupee! Start tracking your finances today.',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[instance.email],
-                html_message=html_message,
-            )
-            logger.info(f"Welcome email sent to {instance.email}")
-        except Exception as e:
-            # Never block signup if email fails
-            logger.error(f"Failed to send welcome email to {instance.email}: {e}")
+                send_mail(
+                    subject='Welcome to TrackMyRupee! 🎉',
+                    message='Welcome to TrackMyRupee! Start tracking your finances today.',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[instance.email],
+                    html_message=html_message,
+                )
+                logger.info(f"Welcome email sent to {instance.email}")
+            except Exception as e:
+                logger.error(f"Failed to send welcome email to {instance.email}: {e}")
+    else:
+        # Handle profile saving for existing users
+        if hasattr(instance, 'profile'):
+            instance.profile.save()
+        else:
+            UserProfile.objects.get_or_create(user=instance)
 
