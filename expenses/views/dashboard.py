@@ -1873,13 +1873,17 @@ def home_view(request):
     
     top_repeat = None
     if repeating_expenses.exists():
-        # Optimization: Fetch active recurring expenses for the user to compare
-        active_recurring = set(RecurringTransaction.objects.filter(
+        # Optimization: Fetch active recurring descriptions (normalized) for the user to compare
+        active_recurring_desc = set(RecurringTransaction.objects.filter(
             user=request.user, is_active=True, transaction_type='EXPENSE'
-        ).values_list('description', 'amount'))
+        ).values_list('description', flat=True))
+        
+        # Normalize for comparison
+        active_recurring_desc_norm = {d.strip().lower() for d in active_recurring_desc}
         
         for repeat in repeating_expenses[:10]: # Check top 10 candidates
-            if (repeat['description'], repeat['amount']) not in active_recurring:
+            desc_norm = repeat['description'].strip().lower()
+            if desc_norm not in active_recurring_desc_norm:
                 top_repeat = repeat
                 break
 
