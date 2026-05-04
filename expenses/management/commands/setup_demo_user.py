@@ -66,7 +66,7 @@ class Command(BaseCommand):
             user=user, 
             name="Cash Wallet", 
             account_type='CASH', 
-            balance=Decimal('35000.00'), 
+            balance=Decimal('75000.00'), 
             currency='₹'
         )
         acc_invest = Account.objects.create(
