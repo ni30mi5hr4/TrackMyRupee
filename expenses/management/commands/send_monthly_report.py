@@ -37,7 +37,7 @@ class Command(BaseCommand):
         month_name = end_date.strftime('%B %Y')
 
         # Filter active users with emails
-        users = User.objects.filter(is_active=True, email__isnull=False).exclude(email='')
+        users = User.objects.filter(is_active=True, email__isnull=False).exclude(email='').exclude(username='demo')
         
         # Check for verified users via allauth if possible
         try:

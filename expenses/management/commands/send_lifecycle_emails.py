@@ -35,7 +35,8 @@ class Command(BaseCommand):
             profile__tier='FREE',
             email__isnull=False,
         ).exclude(
-            email=''
+            email='',
+            username='demo'
         ).select_related('profile')
 
         self.stdout.write(f"Found {free_users.count()} free-tier users to evaluate...")
