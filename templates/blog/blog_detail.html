@@ -7,7 +7,7 @@
 {% block meta_tags %}
 <meta name="description" content="{{ post.summary }}">
 <meta name="keywords" content="{% if post.keywords %}{{ post.keywords }}, {% endif %}finance, budget, expense tracker, {{ post.title }}, TrackMyRupee">
-<meta name="author" content="Omkar Pathak">
+<meta name="author" content="{% if post.author %}{{ post.author.get_full_name|default:post.author.username }}{% else %}Admin{% endif %}">
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="article">
@@ -40,7 +40,7 @@
   "dateModified": "{{ post.updated_date|date:'Y-m-d' }}",
   "author": {
     "@type": "Person",
-    "name": "Omkar Pathak"
+    "name": "{% if post.author %}{{ post.author.get_full_name|default:post.author.username }}{% else %}Admin{% endif %}"
   },
   "publisher": {
     "@type": "Organization",
@@ -74,10 +74,23 @@
 
             <article>
                 <h1 class="display-6 fw-bold mb-3">{{ post.title }}</h1>
-                <div class="text-muted mb-3 d-flex align-items-center small">
-                    <i class="bi bi-calendar3 me-2"></i> {{ post.published_date|date:"F j, Y" }}
+                <div class="text-muted mb-4 d-flex align-items-center small gap-3 flex-wrap">
+                    <span class="d-inline-flex align-items-center"><i class="bi bi-person me-1"></i> {% if post.author %}{{ post.author.get_full_name|default:post.author.username }}{% else %}Admin{% endif %}</span>
+                    <span class="d-inline-flex align-items-center"><i class="bi bi-calendar3 me-1"></i> {{ post.published_date|date:"F j, Y" }}</span>
+                    <span class="d-inline-flex align-items-center"><i class="bi bi-clock me-1"></i> {{ post.read_time }} min read</span>
                 </div>
 
+                <style>
+                    .blog-content a {
+                        color: var(--bs-primary);
+                        text-decoration: none;
+                        font-weight: 500;
+                    }
+                    .blog-content a:hover {
+                        text-decoration: underline;
+                        opacity: 0.8;
+                    }
+                </style>
                 <div class="blog-content fs-blog-content text-break">
                     {{ post.content|markdown }}
                 </div>
