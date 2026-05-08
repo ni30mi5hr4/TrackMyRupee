@@ -154,9 +154,11 @@ class Command(BaseCommand):
             {'cat': 'Subscriptions', 'amount': 649, 'freq': 'MONTHLY', 'desc': 'Netflix Premium'},
             {'cat': 'Subscriptions', 'amount': 299, 'freq': 'MONTHLY', 'desc': 'Spotify Family'},
             {'cat': 'Shopping', 'amount': 3000, 'freq': 'MONTHLY', 'desc': 'Amazon/Myntra Shopping'},
-            
-            # Investments (SIPs)
-            {'cat': 'Mutual Funds', 'amount': 10000, 'freq': 'MONTHLY', 'desc': 'Nifty 50 Index Fund SIP'},
+        ]
+        
+        # Investment Transfers (SIPs)
+        investment_patterns = [
+            {'amount': 10000, 'freq': 'MONTHLY', 'desc': 'Nifty 50 Index Fund SIP'},
         ]
 
         curr_date = three_months_ago
@@ -190,9 +192,21 @@ class Command(BaseCommand):
                         payment_method='UPI' if 'Dining' in pattern['cat'] else 'Debit Card',
                         account=selected_account
                     )
+                    
+            for pattern in investment_patterns:
+                if pattern['freq'] == 'MONTHLY' and curr_date.day == 5:
+                    Transfer.objects.create(
+                        user=user,
+                        from_account=acc_main,
+                        to_account=acc_invest,
+                        amount=pattern['amount'],
+                        date=curr_date,
+                        description=pattern['desc']
+                    )
+            
             curr_date += timedelta(days=1)
 
-        self.stdout.write(self.style.SUCCESS('Generated Realistic Expense History'))
+        self.stdout.write(self.style.SUCCESS('Generated Realistic Expense History and Investment Transfers'))
         
         # 5.1 Enforce "Today" and "Yesterday" Expenses for Dashboard KPI
         # We target ~₹12,000 in Dining Out for May to show the '33%' insight on ~₹36k total expenses
