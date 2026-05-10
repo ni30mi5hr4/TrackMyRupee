@@ -17,6 +17,7 @@ urlpatterns = [
     path('demo-signup/', views.demo_signup, name='demo_signup'),
     path('upload/', views.upload_view, name='upload'),
     path('export/', views.export_expenses, name='export-expenses'),
+    path('transactions/', views.AllTransactionsListView.as_view(), name='all-transactions'),
     path('expenses/', views.ExpenseListView.as_view(), name='expense-list'),
     path('expenses/add/', views.ExpenseCreateView.as_view(), name='expense-create'),
     path('expenses/<int:pk>/edit/', views.ExpenseUpdateView.as_view(), name='expense-edit'),

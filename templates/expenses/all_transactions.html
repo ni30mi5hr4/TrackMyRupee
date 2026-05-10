@@ -1,0 +1,382 @@
+{% extends 'base.html' %}
+{% load i18n digit_filters expense_extras humanize %}
+
+{% block content %}
+<style>
+    /* Adopted from expense_list.html */
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 767.98px) {
+        .table-responsive table {
+            min-width: 800px;
+        }
+
+        #mobileGridView .expense-card .card-body > .mobile-card-inner {
+            display: grid !important;
+            grid-template-columns: 38px minmax(0, 1fr) 95px 30px !important;
+            grid-template-areas: "icon info amount menu" !important;
+            align-items: center !important;
+            gap: 0 !important;
+        }
+
+        #mobileGridView .expense-card .category-icon-container { 
+            grid-area: icon; 
+            margin: 0 !important; 
+            width: 32px !important;
+            height: 32px !important;
+            justify-self: center;
+        }
+        #mobileGridView .expense-card .flex-grow-1 { 
+            grid-area: info; 
+            margin: 0 !important; 
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            overflow: hidden;
+        }
+        #mobileGridView .expense-card .flex-shrink-0.text-end { 
+            grid-area: amount; 
+            margin: 0 !important; 
+            width: 100% !important;
+            padding-right: 4px;
+        }
+        #mobileGridView .expense-card .dropdown { 
+            grid-area: menu; 
+            margin: 0 !important; 
+            justify-self: center;
+        }
+    }
+
+    .expense-card {
+        border-radius: 16px !important;
+        border: 1px solid var(--bs-border-color-translucent) !important;
+        background-color: var(--bs-body-bg);
+    }
+
+    .view-toggle-btn, .filter-toggle-btn, .header-action-btn {
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px !important;
+        transition: all 0.2s ease;
+        border: 1px solid var(--bs-border-color);
+        background: transparent;
+    }
+    .view-toggle-btn, .filter-toggle-btn {
+        width: 36px;
+        padding: 0;
+        color: var(--bs-secondary);
+    }
+    .view-toggle-btn.active, .filter-toggle-btn[aria-expanded="true"] {
+        background: rgba(var(--bs-primary-rgb), 0.1) !important;
+        color: var(--bs-primary) !important;
+        border-color: rgba(var(--bs-primary-rgb), 0.3) !important;
+    }
+
+    .category-icon-container {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        border-radius: 12px;
+        background-color: var(--bs-tertiary-bg);
+    }
+
+    .type-badge {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 4px;
+        letter-spacing: 0.02em;
+    }
+    .type-expense { background-color: rgba(224, 92, 69, 0.1); color: #E05C45; }
+    .type-income { background-color: rgba(29, 158, 117, 0.1); color: #1D9E75; }
+    .type-transfer { background-color: rgba(55, 138, 221, 0.1); color: #378ADD; }
+
+    .amount-expense { color: #E05C45; }
+    .amount-income { color: #1D9E75; }
+    .amount-transfer { color: #378ADD; }
+</style>
+
+<div class="fade-in">
+    <!-- Header -->
+    <div class="card-header bg-transparent pt-1 pb-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0 fw-bold h3">{% trans "All Transactions" %}</h2>
+            
+            <div class="d-flex align-items-center gap-2">
+                <!-- View Toggle -->
+                <div class="d-flex gap-1">
+                    <button class="view-toggle-btn active" id="desktopTableToggle" title="{% trans 'Table View' %}">
+                        <i class="bi bi-list-ul"></i>
+                    </button>
+                    <button class="view-toggle-btn" id="desktopGridToggle" title="{% trans 'Card View' %}">
+                        <i class="bi bi-grid-fill" style="font-size: 0.85rem;"></i>
+                    </button>
+                </div>
+                <button class="filter-toggle-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#transactionFilters" aria-expanded="false" aria-controls="transactionFilters">
+                    <i class="bi bi-funnel"></i>
+                </button>
+                
+                <div class="dropdown">
+                    <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        {% trans "Add" %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                        <li><a class="dropdown-item py-2" href="{% url 'expense-create' %}"><i class="bi bi-dash-circle me-2 text-danger"></i>{% trans "Add Expense" %}</a></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'income-create' %}"><i class="bi bi-plus-circle me-2 text-success"></i>{% trans "Add Income" %}</a></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'transfer-create' %}"><i class="bi bi-arrow-left-right me-2 text-primary"></i>{% trans "Add Transfer" %}</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="text-muted small mb-0 mt-2 d-flex align-items-center flex-wrap gap-2">
+            <span class="text-nowrap">
+                <span class="fw-bold text-primary">{{ filtered_count|translate_digits }}</span> {% trans "transactions" %}
+            </span>
+            <span class="opacity-50 d-none d-sm-inline">•</span>
+            <span class="text-nowrap">
+                <span class="fw-bold text-danger">{{ expense_count|translate_digits }}</span> {% trans "expenses" %}
+            </span>
+            <span class="opacity-50 d-none d-sm-inline">•</span>
+            <span class="text-nowrap">
+                <span class="fw-bold text-info">{{ transfer_count|translate_digits }}</span> {% trans "transfers" %}
+            </span>
+            <span class="opacity-50 d-none d-sm-inline">•</span>
+            <span class="text-nowrap">
+                <span class="fw-bold text-success">{{ income_count|translate_digits }}</span> {% trans "incomes" %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="collapse" id="transactionFilters">
+        <form method="get" class="mb-4 bg-body p-3 rounded shadow-sm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">{% trans "Search" %}</label>
+                    <input type="text" name="search" class="form-control form-control-sm" value="{{ search_query }}" placeholder="{% trans 'Description...' %}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">{% trans "Type" %}</label>
+                    <select name="type" class="form-select form-select-sm django-multi-select" multiple>
+                        <option value="EXPENSE" {% if 'EXPENSE' in selected_types %}selected{% endif %}>{% trans "Expense" %}</option>
+                        <option value="INCOME" {% if 'INCOME' in selected_types %}selected{% endif %}>{% trans "Income" %}</option>
+                        <option value="TRANSFER" {% if 'TRANSFER' in selected_types %}selected{% endif %}>{% trans "Transfer" %}</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-muted">{% trans "Year" %}</label>
+                    <select name="year" class="form-select form-select-sm django-multi-select" multiple>
+                        {% for y in years %}
+                        <option value="{{ y }}" {% if y|stringformat:"s" in selected_years %}selected{% endif %}>{{ y|translate_digits }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted">{% trans "Month" %}</label>
+                    <select name="month" class="form-select form-select-sm django-multi-select" multiple>
+                        {% for m_val, m_name in months_list %}
+                        <option value="{{ m_val }}" {% if m_val|stringformat:"s" in selected_months %}selected{% endif %}>{{ m_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">{% trans "Apply" %}</button>
+                    <a href="{% url 'all-transactions' %}" class="btn btn-outline-secondary btn-sm">{% trans "Reset" %}</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Main View -->
+    <div class="card-body p-0">
+        {% if transactions %}
+            <!-- Table View -->
+            <div id="tableView" class="table-responsive">
+                <table class="table table-hover table-striped mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">{% trans "Date" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Description" %}</th>
+                            <th>{% trans "Category/Source" %}</th>
+                            <th>{% trans "Account" %}</th>
+                            <th class="text-end pe-4">{% trans "Amount" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in transactions %}
+                        <tr>
+                            <td class="ps-4 text-nowrap">{{ tx.date|date:"d M Y"|translate_digits }}</td>
+                            <td>
+                                <span class="type-badge type-{{ tx.type|lower }}">
+                                    {% if tx.type == 'EXPENSE' %}{% trans "Expense" %}
+                                    {% elif tx.type == 'INCOME' %}{% trans "Income" %}
+                                    {% else %}{% trans "Transfer" %}{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ tx.description|default:"-"|truncatechars:40 }}</td>
+                            <td>
+                                {% if tx.type == 'EXPENSE' %}
+                                    <span class="badge-soft badge-soft-danger"><i class="bi {% category_icon tx.cat user %} me-1"></i>{{ tx.cat }}</span>
+                                {% elif tx.type == 'INCOME' %}
+                                    <span class="badge-soft badge-soft-success"><i class="bi bi-wallet2 me-1"></i>{{ tx.cat }}</span>
+                                {% else %}
+                                    <span class="badge-soft badge-soft-primary"><i class="bi bi-arrow-left-right me-1"></i>{% trans "Transfer" %}</span>
+                                {% endif %}
+                            </td>
+                            <td class="small text-muted">{{ tx.acc }}</td>
+                            <td class="text-end pe-4 fw-bold amount-{{ tx.type|lower }}">
+                                {% if tx.type == 'EXPENSE' %}-{% elif tx.type == 'INCOME' %}+{% endif %}
+                                {{ user.profile.currency }}{{ tx.unified_amount|compact_amount:user.profile.currency|translate_digits }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Grid View (Desktop) -->
+            <div id="gridView" class="py-3 d-none">
+                <div class="row g-3">
+                    {% for tx in transactions %}
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card expense-card h-100 shadow-sm border-0">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="category-icon-container">
+                                        {% if tx.type == 'EXPENSE' %}<i class="bi {% category_icon tx.cat user %}"></i>
+                                        {% elif tx.type == 'INCOME' %}<i class="bi bi-plus-circle"></i>
+                                        {% else %}<i class="bi bi-arrow-left-right"></i>{% endif %}
+                                    </div>
+                                    <div class="flex-grow-1 min-width-0">
+                                        <div class="fw-semibold text-truncate">{{ tx.description|default:tx.cat }}</div>
+                                        <div class="text-muted d-flex align-items-center gap-1">
+                                            <span style="font-size: 0.7rem;">{{ tx.date|date:"d M 'y"|translate_digits }}</span>
+                                            <span class="opacity-50 flex-shrink-0">|</span>
+                                            <span style="font-size: 0.7rem;">{{ tx.type|lower }}</span>
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.7rem; opacity: 0.6;">{{ tx.acc|truncatechars:40 }}</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold fs-5 amount-{{ tx.type|lower }}">
+                                            {% if tx.type == 'EXPENSE' %}-{% elif tx.type == 'INCOME' %}+{% endif %}
+                                            {{ user.profile.currency }}{{ tx.unified_amount|compact_amount:user.profile.currency|translate_digits }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Mobile View -->
+            <div id="mobileGridView" class="py-2 d-none d-md-none">
+                {% regroup transactions by date as tx_by_date %}
+                {% for group in tx_by_date %}
+                <div class="mb-3">
+                    <div class="text-body-secondary fw-semibold small mb-2 px-1">{{ group.grouper|date:"d M, Y"|translate_digits }}</div>
+                    {% for tx in group.list %}
+                    <div class="card expense-card shadow-sm border-0 mb-2">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="category-icon-container" style="width: 40px; height: 40px; font-size: 1rem;">
+                                    {% if tx.type == 'EXPENSE' %}<i class="bi {% category_icon tx.cat user %}"></i>
+                                    {% elif tx.type == 'INCOME' %}<i class="bi bi-plus-circle"></i>
+                                    {% else %}<i class="bi bi-arrow-left-right"></i>{% endif %}
+                                </div>
+                                <div class="flex-grow-1 min-width-0">
+                                    <div class="fw-semibold mb-1">{{ tx.description|default:tx.cat }}</div>
+                                    <div class="text-muted" style="font-size: 0.65rem;">{{ tx.acc|truncatechars:40 }}</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold amount-{{ tx.type|lower }}">
+                                        {% if tx.type == 'EXPENSE' %}-{% elif tx.type == 'INCOME' %}+{% endif %}
+                                        {{ user.profile.currency }}{{ tx.unified_amount|compact_amount:user.profile.currency|translate_digits }}
+                                    </div>
+                                    <span style="font-size: 0.55rem;">{{ tx.type }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-search fs-1 text-muted opacity-25"></i>
+                <h4 class="mt-3 text-muted">{% trans "No transactions found" %}</h4>
+                <p class="text-muted small">{% trans "Try adjusting your filters" %}</p>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="card-footer bg-transparent py-3">
+        <nav>
+            <ul class="pagination justify-content-center mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode|cut:'page=' }}">{% trans "Previous" %}</a></li>
+                {% endif %}
+                <li class="page-item disabled"><span class="page-link">{% trans "Page" %} {{ page_obj.number|translate_digits }}</span></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode|cut:'page=' }}">{% trans "Next" %}</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tableToggles = [document.getElementById('desktopTableToggle')];
+        const gridToggles = [document.getElementById('desktopGridToggle')];
+        const tableView = document.getElementById('tableView');
+        const gridView = document.getElementById('gridView');
+        const mobileGridView = document.getElementById('mobileGridView');
+        const storageKey = 'trackmyrupee_all_tx_view_mode';
+
+        function setViewMode(mode) {
+            const isMobile = window.innerWidth < 768;
+            if (mode === 'grid') {
+                tableView.classList.add('d-none');
+                if (isMobile) {
+                    gridView.classList.add('d-none');
+                    mobileGridView.classList.remove('d-none');
+                } else {
+                    gridView.classList.remove('d-none');
+                    mobileGridView.classList.add('d-none');
+                }
+                gridToggles.forEach(t => t.classList.add('active'));
+                tableToggles.forEach(t => t.classList.remove('active'));
+            } else {
+                gridView.classList.add('d-none');
+                mobileGridView.classList.add('d-none');
+                tableView.classList.remove('d-none');
+                tableToggles.forEach(t => t.classList.add('active'));
+                gridToggles.forEach(t => t.classList.remove('active'));
+            }
+            localStorage.setItem(storageKey, mode);
+        }
+
+        tableToggles.forEach(btn => btn && btn.addEventListener('click', () => setViewMode('table')));
+        gridToggles.forEach(btn => btn && btn.addEventListener('click', () => setViewMode('grid')));
+
+        const savedMode = localStorage.getItem(storageKey) || 'table';
+        setViewMode(savedMode);
+    });
+</script>
+{% endblock %}

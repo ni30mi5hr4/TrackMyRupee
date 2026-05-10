@@ -41,6 +41,12 @@
                 </a>
             </div>
 
+            <!-- All Transactions -->
+            <a href="{% url 'all-transactions' %}" class="nav-link d-flex align-items-center gap-3 rounded-3 {% if request.resolver_match.url_name == 'all-transactions' %}active{% endif %}" title="{% trans 'All Transactions' %}">
+                <i class="bi bi-list-columns-reverse fs-5"></i>
+                <span class="nav-text">{% trans "Transactions" %}</span>
+            </a>
+
             <!-- Goals -->
             <a href="{% url 'goal-list' %}" class="nav-link d-flex align-items-center gap-3 rounded-3 {% if 'goal' in request.resolver_match.url_name %}active{% endif %}" title="{% trans 'Goals' %}">
                 <i class="bi bi-bullseye fs-5"></i>

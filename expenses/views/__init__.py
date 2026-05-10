@@ -13,4 +13,5 @@ from .mom_view import *
 from .notifications import *
 from .recurring import *
 from .export import *
+from .all_transactions import *
 from .settings import *
