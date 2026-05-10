@@ -346,7 +346,7 @@
 </div>
 
 <!-- Mobile More Bottom Sheet -->
-<div class="offcanvas offcanvas-bottom mobile-bottom-sheet d-lg-none" tabindex="-1" id="moreMenuSheet" aria-labelledby="moreMenuSheetLabel">
+<div class="offcanvas offcanvas-bottom mobile-bottom-sheet d-lg-none" tabindex="-1" id="moreMenuSheet" aria-labelledby="moreMenuSheetLabel" style="height: 75vh !important;">
     <div class="offcanvas-header border-bottom py-3">
         <div class="d-flex align-items-center gap-2">
             <img src="{% static 'img/logo.svg' %}" alt="TrackMyRupee" width="28" height="28" class="rounded-2">
@@ -354,7 +354,7 @@
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-    <div class="offcanvas-body p-0">
+    <div class="offcanvas-body p-0" style="overflow-y: auto;">
         <!-- User Profile Header -->
         <div class="px-4 py-4 border-bottom bg-body-tertiary">
             <div class="d-flex align-items-center gap-3">
@@ -443,7 +443,7 @@
 </div>
 
 <!-- Mobile Support & Legal Bottom Sheet -->
-<div class="offcanvas offcanvas-bottom mobile-bottom-sheet d-lg-none" tabindex="-1" id="supportLegalSheet" aria-labelledby="supportLegalSheetLabel">
+<div class="offcanvas offcanvas-bottom mobile-bottom-sheet d-lg-none" tabindex="-1" id="supportLegalSheet" aria-labelledby="supportLegalSheetLabel" style="height: 75vh !important;">
     <div class="offcanvas-header border-bottom py-3">
         <div class="d-flex align-items-center gap-2">
             <button type="button" class="btn btn-link p-0 text-decoration-none me-2" data-bs-toggle="offcanvas" data-bs-target="#moreMenuSheet">
@@ -453,7 +453,7 @@
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
-    <div class="offcanvas-body p-0">
+    <div class="offcanvas-body p-0" style="overflow-y: auto;">
         <div class="list-group list-group-flush pb-4 mt-2">
             <a href="{% url 'about' %}" class="list-group-item list-group-item-action">
                 <i class="bi bi-info-circle"></i>
