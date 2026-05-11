@@ -103,6 +103,25 @@
     .amount-expense { color: #E05C45; }
     .amount-income { color: #1D9E75; }
     .amount-transfer { color: #378ADD; }
+
+    /* Empty State */
+    .empty-state-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--bs-body-bg);
+        border-radius: 20px;
+        margin: 2rem 0;
+    }
+    .empty-state-container svg {
+        width: 100%;
+        max-width: 160px;
+        height: auto;
+    }
+    .max-width-300 { max-width: 300px; }
 </style>
 
 <div class="fade-in">
@@ -144,7 +163,7 @@
                     <i class="bi bi-funnel"></i>
                 </button>
                 
-                <div class="dropdown">
+                <div class="dropdown d-none d-md-block">
                     <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         {% trans "Add" %}
                     </button>
@@ -387,10 +406,22 @@
             </div>
 
         {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-search fs-1 text-muted opacity-25"></i>
-                <h4 class="mt-3 text-muted">{% trans "No transactions found" %}</h4>
-                <p class="text-muted small">{% trans "Try adjusting your filters" %}</p>
+            <div class="empty-state-container py-5">
+                <div class="mb-4">
+                    {% include 'illustrations/empty_generic.svg' %}
+                </div>
+                <h4 class="fw-bold text-body-emphasis">{% trans "No transactions found" %}</h4>
+                <p class="text-muted small max-width-300 mx-auto mb-4">
+                    {% trans "We couldn't find any transactions matching your current filters. Try adjusting your search or date range." %}
+                </p>
+                <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center align-items-center">
+                    <a href="{% url 'all-transactions' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4 w-100 w-sm-auto text-nowrap">
+                        <i class="bi bi-x-circle me-2"></i>{% trans "Clear Filters" %}
+                    </a>
+                    <a href="{% url 'expense-create' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm rounded-pill px-4 w-100 w-sm-auto text-nowrap">
+                        <i class="bi bi-plus-lg me-2"></i>{% trans "Add Expense" %}
+                    </a>
+                </div>
             </div>
         {% endif %}
     </div>
