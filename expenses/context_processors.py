@@ -49,7 +49,7 @@ def user_accounts(request):
     """Provides user accounts to all templates for the sidebar."""
     if request.user.is_authenticated:
         from .models import Account
-        accounts = Account.objects.filter(user=request.user).order_by('name')
+        accounts = Account.objects.filter(user=request.user, is_active=True).order_by('name')
         count = accounts.count()
         return {
             'sidebar_accounts': accounts[:5],

@@ -68,7 +68,7 @@ class IncomeListView(LoginRequiredMixin, RecurringTransactionMixin, ListView):
         context = super().get_context_data(**kwargs)
         from ..models import CURRENCY_CHOICES, Account
         context['currency_choices'] = CURRENCY_CHOICES
-        context['accounts'] = Account.objects.filter(user=self.request.user)
+        context['accounts'] = Account.objects.filter(user=self.request.user, is_active=True)
         
         # Get active recurring sources and their frequencies for this user
         recurring_data = {

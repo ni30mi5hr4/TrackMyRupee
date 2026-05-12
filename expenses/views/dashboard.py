@@ -1272,7 +1272,7 @@ def home_view(request):
 
     # 4. Financial Coach Moments (Milestones)
     # Net Worth Milestone
-    net_worth = Account.objects.filter(user=request.user).aggregate(Sum('balance'))['balance__sum'] or 0
+    net_worth = Account.objects.filter(user=request.user, is_active=True).aggregate(Sum('balance'))['balance__sum'] or 0
     milestones = [100000, 500000, 1000000, 2500000, 5000000, 10000000]
     applicable_milestone = None
     for m in milestones:
@@ -1435,7 +1435,7 @@ def home_view(request):
         proj_forecast.append(float(avg_spend))
 
     # Net Worth & Asset Allocation Calculation (multi-currency aware)
-    accounts = Account.objects.filter(user=request.user)
+    accounts = Account.objects.filter(user=request.user, is_active=True)
     base_currency = currency_symbol  # user's profile currency
 
     # Convert each account balance to user's base currency
@@ -1844,7 +1844,7 @@ def home_view(request):
             obj.save()
 
     # 1. Accounts Nudge: If only 1 account exists
-    if Account.objects.filter(user=request.user).count() == 1:
+    if Account.objects.filter(user=request.user, is_active=True).count() == 1:
         add_nudge_alt(
             _('Smart Tip: Multiple Accounts'),
             _('Add separate accounts (like cash, bank, or UPI) to track your money more accurately across all sources.'),

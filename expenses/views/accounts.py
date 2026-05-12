@@ -28,7 +28,7 @@ class AccountListView(LoginRequiredMixin, ListView):
         from .mixins import process_user_recurring_transactions
         process_user_recurring_transactions(self.request.user)
         # Order by created_at to ensure consistent locking of 'newer' accounts
-        queryset = list(Account.objects.filter(user=self.request.user).order_by('created_at', 'id'))
+        queryset = list(Account.objects.filter(user=self.request.user, is_active=True).order_by('created_at', 'id'))
         
         account_type = self.request.GET.get('type')
         if account_type:
@@ -107,7 +107,7 @@ class AccountDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('account-list')
 
     def get_queryset(self):
-        return Account.objects.filter(user=self.request.user)
+        return Account.objects.filter(user=self.request.user, is_active=True)
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -120,8 +120,11 @@ class AccountDeleteView(LoginRequiredMixin, DeleteView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
+        success_url = self.get_success_url()
+        self.object.is_active = False
+        self.object.save()
         messages.success(self.request, _("Account deleted successfully."))
-        return super().form_valid(form)
+        return redirect(success_url)
 
 class AccountQuickCreateView(LoginRequiredMixin, View):
     """AJAX endpoint for creating an account from a modal and returning JSON."""

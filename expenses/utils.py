@@ -166,7 +166,7 @@ def generate_year_in_review_data(user, year):
     data['total_invested'] = investments.aggregate(total=Sum('converted_amount'))['total'] or Decimal('0.00')
 
     # 8. Accounts Used
-    data['account_count'] = Account.objects.filter(user=user).count()
+    data['account_count'] = Account.objects.filter(user=user, is_active=True).count()
 
     return data
 

@@ -451,7 +451,7 @@ def parse_expense_view(request):
         default_payment_method = last_expense.payment_method if last_expense else 'Cash' # sensible default
         
         # Get user's accounts for matching
-        user_accounts = list(Account.objects.filter(user=request.user).values_list('name', flat=True))
+        user_accounts = list(Account.objects.filter(user=request.user, is_active=True).values_list('name', flat=True))
         
         result = parse_expense_nl(text, user_categories=combined_categories, user_accounts=user_accounts, user=request.user)
         if result:

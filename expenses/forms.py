@@ -47,7 +47,7 @@ class ExpenseForm(forms.ModelForm):
             self.fields['category'].widget = forms.Select(choices=choices, attrs={'class': 'form-select django-multi-select'})
             
             # Filter accounts for the user, enforcing tier limits
-            all_accounts = Account.objects.filter(user=user).order_by('created_at', 'id')
+            all_accounts = Account.objects.filter(user=user, is_active=True).order_by('created_at', 'id')
             limit = get_limit(profile.active_tier, 'accounts')
             if limit != -1:
                 unlocked_ids = all_accounts.values_list('id', flat=True)[:limit]
@@ -98,7 +98,7 @@ class IncomeForm(forms.ModelForm):
             self.fields['currency'].initial = self.user.profile.currency
             
             # Enforce Tier Limits for Accounts
-            all_accounts = Account.objects.filter(user=self.user).order_by('created_at', 'id')
+            all_accounts = Account.objects.filter(user=self.user, is_active=True).order_by('created_at', 'id')
             from finance_tracker.plans import get_limit
             limit = get_limit(self.user.profile.active_tier, 'accounts')
             if limit != -1:
@@ -148,7 +148,7 @@ class RecurringTransactionForm(forms.ModelForm):
             self.fields['currency'].initial = user.profile.currency
             
             # Enforce Tier Limits for Accounts
-            all_accounts = Account.objects.filter(user=user).order_by('created_at', 'id')
+            all_accounts = Account.objects.filter(user=user, is_active=True).order_by('created_at', 'id')
             from finance_tracker.plans import get_limit
             limit = get_limit(user.profile.active_tier, 'accounts')
             if limit != -1:
@@ -357,7 +357,7 @@ class GoalContributionForm(forms.ModelForm):
         self.fields['date'].initial = date.today
         if user:
             # Enforce Tier Limits for Accounts
-            all_accounts = Account.objects.filter(user=user).order_by('created_at', 'id')
+            all_accounts = Account.objects.filter(user=user, is_active=True).order_by('created_at', 'id')
             from finance_tracker.plans import get_limit
             limit = get_limit(user.profile.active_tier, 'accounts')
             if limit != -1:
@@ -444,7 +444,7 @@ class TransferForm(forms.ModelForm):
         self.fields['date'].initial = date.today
         if user:
             # Enforce Tier Limits for Accounts
-            all_accounts = Account.objects.filter(user=user).order_by('created_at', 'id')
+            all_accounts = Account.objects.filter(user=user, is_active=True).order_by('created_at', 'id')
             from finance_tracker.plans import get_limit
             limit = get_limit(user.profile.active_tier, 'accounts')
             if limit != -1:

@@ -76,6 +76,8 @@ class Account(models.Model):
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'), verbose_name=_('Current Balance'))
     currency = models.CharField(max_length=5, choices=CURRENCY_CHOICES, default='₹', verbose_name=_('Currency'))
     
+    is_active = models.BooleanField(default=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -531,7 +533,7 @@ class UserProfile(models.Model):
         """Checks account limit based on tier."""
         limit = get_limit(self.active_tier, 'accounts')
         if limit == -1: return True
-        return self.user.accounts.count() < limit
+        return self.user.accounts.filter(is_active=True).count() < limit
 
     def can_add_expense(self):
         """Checks monthly expense limit based on tier."""
@@ -580,7 +582,7 @@ class UserProfile(models.Model):
         if limit == -1: return False
         
         # Order by created_at so the 'oldest' accounts stay unlocked
-        accounts = list(self.user.accounts.all().order_by('created_at', 'id'))
+        accounts = list(self.user.accounts.filter(is_active=True).order_by('created_at', 'id'))
         if account in accounts and accounts.index(account) >= limit:
             return True
         return False

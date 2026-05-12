@@ -1,4 +1,5 @@
 from django.contrib import admin
+from .models import SubscriptionPlan
 
 from .models import (
     Account,
@@ -109,8 +110,6 @@ class PaymentHistoryAdmin(admin.ModelAdmin):
         return obj.user.profile.subscription_end_date
     subscription_end_date.short_description = 'Sub End Date'
     subscription_end_date.admin_order_field = 'user__profile__subscription_end_date'
-
-from .models import SubscriptionPlan
 
 
 @admin.register(SubscriptionPlan)
