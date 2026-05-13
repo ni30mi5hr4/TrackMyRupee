@@ -41,6 +41,17 @@
                 </a>
             </div>
 
+            <!-- Income -->
+            <div class="d-flex align-items-center position-relative px-0">
+                <a href="{% url 'income-list' %}" class="nav-link d-flex align-items-center gap-3 rounded-3 flex-grow-1 {% if 'income' in request.resolver_match.url_name %}active{% endif %}" title="{% trans 'Income' %}">
+                    <i class="bi bi-cash-coin fs-5"></i>
+                    <span class="nav-text">{% trans "Income" %}</span>
+                </a>
+                <a href="{% url 'income-create' %}" class="btn-sidebar-add nav-text me-2" title="{% trans 'Add Income' %}">
+                    <i class="bi bi-plus-lg"></i>
+                </a>
+            </div>
+
             <!-- All Transactions -->
             <a href="{% url 'all-transactions' %}" class="nav-link d-flex align-items-center gap-3 rounded-3 {% if request.resolver_match.url_name == 'all-transactions' %}active{% endif %}" title="{% trans 'All Transactions' %}">
                 <i class="bi bi-list-columns-reverse fs-5"></i>
@@ -86,47 +97,15 @@
                 <span class="nav-text">{% trans "Analytics" %}</span>
             </a>
 
-            <!-- Divider -->
-            <hr>
-
-            <!-- Accounts Section -->
-            <div class="sidebar-section mb-2">
-                <div class="sidebar-section-title d-flex justify-content-between align-items-center mb-2">
-                    <span class="px-3 text-muted">{% trans "Accounts" %}</span>
-                    <a href="{% url 'account-create' %}" class="btn btn-link p-0 text-decoration-none nav-text me-4" title="{% trans 'Add Account' %}">
-                        <i class="bi bi-plus-lg"></i>
-                    </a>
-                </div>
-                <div class="nav flex-column gap-1">
-                    {% for account in sidebar_accounts %}
-                    <a href="{% url 'account-detail' account.pk %}" class="nav-link small py-1 d-flex align-items-center rounded-2 account-item type-{{ account.account_type|lower }}" 
-                       title="{{ account.name }}: {{ currency_symbol }}{{ account.balance }}">
-                        <div class="d-flex justify-content-between align-items-center w-100 min-width-0">
-                            <div class="d-flex align-items-center min-width-0">
-                                <span class="account-dot me-2"></span>
-                                <span class="account-name text-truncate">{{ account.name|truncatechars:15 }}</span>
-                                {% if account.account_type == 'CREDIT_CARD' %}
-                                <i class="ms-2 bi bi-credit-card ms-1 smaller opacity-50 d-inline-flex align-items-center" style="line-height: 1; font-size: 14px;" data-bs-toggle="tooltip" data-bs-placement="top" title="{% trans 'Credit card balance: negative means outstanding debt.' %}"></i>
-                                {% endif %}
-                            </div>
-                            <span class="account-balance ms-2 {% if account.balance < 0 %}text-danger{% endif %}">{{ account.balance|compact_amount:currency_symbol }}</span>
-                        </div>
-                    </a>
-                    {% empty %}
-                    <div class="text-center py-2">
-                        <p class="text-muted smaller mb-2">{% trans "No accounts found" %}</p>
-                        <a href="{% url 'account-create' %}" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;">
-                            <i class="bi bi-plus"></i> {% trans "Add new" %}
-                        </a>
-                    </div>
-                    {% endfor %}
-                    
-                    {% if has_more_accounts %}
-                    <a href="{% url 'account-list' %}" class="nav-link small py-1 text-primary fw-medium d-flex align-items-center">
-                        <span class="nav-text">{% trans "View all" %}</span>
-                    </a>
-                    {% endif %}
-                </div>
+            <!-- Accounts -->
+            <div class="d-flex align-items-center position-relative px-0">
+                <a href="{% url 'account-list' %}" class="nav-link d-flex align-items-center gap-3 rounded-3 flex-grow-1 {% if 'account' in request.resolver_match.url_name %}active{% endif %}" title="{% trans 'Accounts' %}">
+                    <i class="bi bi-bank fs-5"></i>
+                    <span class="nav-text">{% trans "Accounts" %}</span>
+                </a>
+                <a href="{% url 'account-create' %}" class="btn-sidebar-add nav-text me-2" title="{% trans 'Add Account' %}">
+                    <i class="bi bi-plus-lg"></i>
+                </a>
             </div>
         </div>
     </div>
