@@ -2,25 +2,13 @@ from django import template
 from ..utils import format_indian_number
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.utils.translation import get_language
+from ..utils import translate_digits as utils_translate_digits
 
 register = template.Library()
 
 @register.filter
 def translate_digits(value):
-    if value is None:
-        return ""
-    
-    lang = get_language()
-    if lang not in ['mr', 'hi']:
-        return value
-    
-    value_str = str(value)
-    arabic_to_devanagari = {
-        '0': '०', '1': '१', '2': '२', '3': '३', '4': '४',
-        '5': '५', '6': '६', '7': '७', '8': '८', '9': '९'
-    }
-    
-    return ''.join(arabic_to_devanagari.get(char, char) for char in value_str)
+    return utils_translate_digits(value)
 
 @register.filter
 def ind_comma(value, currency_symbol='₹'):

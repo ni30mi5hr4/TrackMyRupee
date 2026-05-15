@@ -4,6 +4,7 @@ import requests
 from django.core.cache import cache
 from django.db.models import Count, Sum
 from django.db.models.functions import ExtractMonth
+from django.utils.translation import get_language
 
 
 def get_exchange_rate(from_curr, to_curr):
@@ -239,3 +240,19 @@ def format_indian_number(amount):
         return f"-{result}" if is_negative else result
     except (ValueError, TypeError):
         return amount
+
+def translate_digits(value):
+    if value is None:
+        return ""
+    
+    lang = get_language()
+    if lang not in ['mr', 'hi']:
+        return value
+    
+    value_str = str(value)
+    arabic_to_devanagari = {
+        '0': '०', '1': '१', '2': '२', '3': '३', '4': '४',
+        '5': '५', '6': '६', '7': '७', '8': '८', '9': '९'
+    }
+    
+    return ''.join(arabic_to_devanagari.get(char, char) for char in value_str)

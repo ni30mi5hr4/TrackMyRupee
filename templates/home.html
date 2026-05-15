@@ -1929,7 +1929,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="d-flex flex-column flex-grow-1 min-w-0">
                                         <h6 class="mb-0 text-truncate fw-bold text-inherit" style="font-size: 0.85rem;">{{ item.description }}</h6>
                                         <small class="text-muted opacity-75" style="font-size: 0.85rem; font-weight: 400;">
-                                            {{ item.date|date:"d M"|translate_digits }} · {% if item.type == 'TRANSFER' %}{{ item.from_account }} → {{ item.to_account }}{% else %}{{ item.category }}{% endif %}
+                                            {{ item.date|date:"d M"|translate_digits }} · {% if item.from_account or item.to_account %}{{ item.from_account }} → {{ item.to_account }}{% else %}{{ item.category }}{% endif %}
                                         </small>
                                     </div>
                                     <div class="text-end">
@@ -2309,7 +2309,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         innerHtml += '<div style="font-size: 9px; opacity: 0.8; margin-bottom: 2px; display: flex; justify-content: space-between;">';
                                         innerHtml += '<span>' + date + '</span>';
                                         if (isProjected) {
-                                            innerHtml += '<span style="color: #4CC9F0; font-weight: bold; margin-left: 8px;">(Projected)</span>';
+                                            innerHtml += '<span style="color: #4CC9F0; font-weight: bold; margin-left: 8px;">({% trans "Projected" %})</span>';
                                         }
                                         innerHtml += '</div>';
                                     }
@@ -2798,13 +2798,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     labels: budgetLabels,
                     datasets: [
                         {
-                            label: 'Spent',
+                            label: '{% trans "Spent" %}',
                             data: spentData,
                             backgroundColor: spentColors,
                             borderRadius: 4,
                         },
                         {
-                            label: 'Remaining',
+                            label: '{% trans "Remaining" %}',
                             data: remainingData,
                             backgroundColor: currentColors.remaining,
                             borderRadius: 4,
@@ -2847,11 +2847,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 title: (c) => c[0].label,
                                 label: (c) => {
                                     const item = withLimits[c.dataIndex];
-                                    if (c.dataset.label === 'Spent') return `Spent: {{ currency_symbol }}${window.compactAmount(item.total, '{{ currency_symbol }}')} (${translateDigits(item.used_percent)}%)`;
+                                    if (c.dataset.label === '{% trans "Spent" %}') return `{% trans "Spent" %}: {{ currency_symbol }}${window.compactAmount(item.total, '{{ currency_symbol }}')} (${translateDigits(item.used_percent)}%)`;
                                     const remaining = Math.max(0, item.limit - item.total);
-                                    return `Remaining: {{ currency_symbol }}${window.compactAmount(remaining, '{{ currency_symbol }}')}`;
+                                    return `{% trans "Remaining" %}: {{ currency_symbol }}${window.compactAmount(remaining, '{{ currency_symbol }}')}`;
                                 },
-                                footer: (c) => `Limit: {{ currency_symbol }}${window.compactAmount(withLimits[c[0].dataIndex].limit, '{{ currency_symbol }}')}`
+                                footer: (c) => `{% trans "Limit" %}: {{ currency_symbol }}${window.compactAmount(withLimits[c[0].dataIndex].limit, '{{ currency_symbol }}')}`
                             }
                         }
                     },
