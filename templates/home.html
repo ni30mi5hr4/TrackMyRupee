@@ -1929,7 +1929,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="d-flex flex-column flex-grow-1 min-w-0">
                                         <h6 class="mb-0 text-truncate fw-bold text-inherit" style="font-size: 0.85rem;">{{ item.description }}</h6>
                                         <small class="text-muted opacity-75" style="font-size: 0.85rem; font-weight: 400;">
-                                            {{ item.date|date:"d M"|translate_digits }} · {% if item.from_account or item.to_account %}{{ item.from_account }} → {{ item.to_account }}{% else %}{{ item.category }}{% endif %}
+                                            {{ item.date|date:"d M"|translate_digits }} · {% if item.type == 'TRANSFER' %}{{ item.from_account }} → {{ item.to_account }}{% else %}{{ item.category }}{% endif %}
                                         </small>
                                     </div>
                                     <div class="text-end">
