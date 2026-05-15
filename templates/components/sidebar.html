@@ -60,6 +60,12 @@
                 <span class="nav-text">{% trans "Transactions" %}</span>
             </a>
 
+            <!-- Budgets -->
+            <a href="{% url 'budget' %}" class="nav-link d-flex align-items-center gap-3 rounded-3 {% if request.resolver_match.url_name == 'budget' %}active{% endif %}" title="{% trans 'Budgets' %}">
+                <i class="bi bi-wallet2 fs-5"></i>
+                <span class="nav-text">{% trans "Budgets" %}</span>
+            </a>
+
             <!-- Goals -->
             <a href="{% url 'goal-list' %}" class="nav-link d-flex align-items-center gap-3 rounded-3 {% if 'goal' in request.resolver_match.url_name %}active{% endif %}" title="{% trans 'Goals' %}">
                 <i class="bi bi-bullseye fs-5"></i>
@@ -110,6 +116,12 @@
                     <span>{% trans "Add" %}</span>
                 </a>
             </div>
+
+            <!-- Settings -->
+            <a href="{% url 'settings-home' %}" class="nav-link d-flex align-items-center gap-3 rounded-3 {% if 'settings' in request.resolver_match.url_name or 'settings' in request.resolver_match.url_name %}active{% endif %}" title="{% trans 'Settings' %}">
+                <i class="bi bi-gear fs-5"></i>
+                <span class="nav-text">{% trans "Settings" %}</span>
+            </a>
         </div>
     </div>
 
