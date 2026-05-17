@@ -312,7 +312,7 @@ class Expense(models.Model):
             old_instance = None
             # Handle balance reversal for updates
             if self.pk:
-                old_instance = Expense.objects.select_for_update().get(pk=self.pk)
+                old_instance = Expense.objects.select_related(None).select_for_update().get(pk=self.pk)
                 if old_instance.account_id:
                     old_account = Account.objects.select_for_update().get(pk=old_instance.account_id)
                     # Convert old amount to account currency for reversal
@@ -499,7 +499,7 @@ class Income(models.Model):
             old_instance = None
             # Handle balance reversal for updates
             if self.pk:
-                old_instance = Income.objects.select_for_update().get(pk=self.pk)
+                old_instance = Income.objects.select_related(None).select_for_update().get(pk=self.pk)
                 if old_instance.account_id:
                     old_account = Account.objects.select_for_update().get(pk=old_instance.account_id)
                     # Convert to account currency for reversal
@@ -1254,7 +1254,7 @@ class GoalContribution(models.Model):
     def save(self, *args, **kwargs):
         with transaction.atomic():
             if self.pk:
-                old_instance = GoalContribution.objects.select_for_update().get(pk=self.pk)
+                old_instance = GoalContribution.objects.select_related(None).select_for_update().get(pk=self.pk)
                 # Revert old balance and goal amount
                 if old_instance.account_id:
                     old_account = Account.objects.select_for_update().get(pk=old_instance.account_id)
