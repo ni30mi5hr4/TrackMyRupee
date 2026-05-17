@@ -196,7 +196,7 @@ class JournalLine(models.Model):
     ]
 
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name='lines')
-    ledger_account = models.ForeignKey(LedgerAccount, on_delete=models.PROTECT, related_name='journal_lines')
+    ledger_account = models.ForeignKey(LedgerAccount, on_delete=models.CASCADE, related_name='journal_lines')
     direction = models.CharField(max_length=10, choices=DIRECTION_CHOICES)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.CharField(max_length=5, choices=CURRENCY_CHOICES)
