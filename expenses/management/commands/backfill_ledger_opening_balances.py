@@ -47,10 +47,18 @@ class Command(BaseCommand):
                 created += 1
                 continue
 
-            _, is_created = LedgerPostingService.post_opening_balance(account=account)
-            if is_created:
-                created += 1
-            else:
+            try:
+                _, is_created = LedgerPostingService.post_opening_balance(account=account)
+                if is_created:
+                    created += 1
+                else:
+                    skipped += 1
+            except Exception as e:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"Error backfilling account {account.id} ({account.name}): {str(e)}"
+                    )
+                )
                 skipped += 1
 
         self.stdout.write(

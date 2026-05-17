@@ -26,7 +26,11 @@ class LedgerPostingService:
 
     @staticmethod
     def _to_base_amount(user, amount, currency):
-        base_currency = user.profile.currency
+        try:
+            base_currency = user.profile.currency
+        except Exception:
+            # Fallback: use Indian Rupee as default if user has no profile
+            base_currency = '₹'
         if currency == base_currency:
             return Decimal("1.0"), amount
         fx_rate = get_exchange_rate(currency, base_currency)
