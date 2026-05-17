@@ -261,10 +261,10 @@ class AccountDetailView(LoginRequiredMixin, View):
         # Get all expenses, incomes, and transfers for this account
         expenses = Expense.objects.filter(user=request.user, account=account)
         incomes = Income.objects.filter(user=request.user, account=account)
-        transfers_from = Transfer.objects.filter(user=request.user, from_account=account)
-        transfers_to = Transfer.objects.filter(user=request.user, to_account=account)
-        contributions = GoalContribution.objects.filter(goal__user=request.user, account=account)
-        loan_repayments = LoanRepayment.objects.filter(loan__user=request.user, from_account=account)
+        transfers_from = Transfer.objects.filter(user=request.user, from_account=account).select_related('to_account')
+        transfers_to = Transfer.objects.filter(user=request.user, to_account=account).select_related('from_account')
+        contributions = GoalContribution.objects.filter(goal__user=request.user, account=account).select_related('goal')
+        loan_repayments = LoanRepayment.objects.filter(loan__user=request.user, from_account=account).select_related('loan')
 
         if query:
             expenses = expenses.filter(Q(description__icontains=query) | Q(category__icontains=query))

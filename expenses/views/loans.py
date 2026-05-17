@@ -18,21 +18,46 @@ class LoanListView(LoginRequiredMixin, ListView):
     context_object_name = 'loans'
 
     def get_queryset(self):
-        return Loan.objects.filter(user=self.request.user).order_by('-start_date')
+        return Loan.objects.filter(user=self.request.user).prefetch_related('repayments').order_by('-start_date')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         loans = self.get_queryset()
-        
+
+        # Bulk-aggregate repayment totals in a single query instead of one per loan
+        from django.db.models import Sum
+        from ..models import LoanRepayment
+        repayment_totals = (
+            LoanRepayment.objects
+            .filter(loan__user=self.request.user)
+            .values('loan_id')
+            .annotate(
+                total_principal=Sum('principal_portion'),
+                total_interest=Sum('interest_portion'),
+                total_amount=Sum('amount'),
+            )
+        )
+        repayment_map = {r['loan_id']: r for r in repayment_totals}
+
         loan_summaries = []
         total_debt = 0
         for loan in loans:
-            summary = LoanService.get_loan_summary(loan)
-            summary['loan'] = loan
-            summary['progress'] = (summary['principal_paid'] / float(loan.initial_principal) * 100) if loan.initial_principal > 0 else 0
+            r = repayment_map.get(loan.id, {})
+            principal_paid = float(r.get('total_principal') or 0)
+            interest_paid = float(r.get('total_interest') or 0)
+            total_paid = float(r.get('total_amount') or 0)
+            remaining_principal = max(float(loan.initial_principal) - principal_paid, 0)
+            summary = {
+                'loan': loan,
+                'principal_paid': principal_paid,
+                'interest_paid': interest_paid,
+                'total_paid': total_paid,
+                'remaining_principal': remaining_principal,
+                'progress': (principal_paid / float(loan.initial_principal) * 100) if loan.initial_principal > 0 else 0,
+            }
             loan_summaries.append(summary)
-            total_debt += summary['remaining_principal']
-            
+            total_debt += remaining_principal
+
         context['loan_summaries'] = loan_summaries
         context['total_debt'] = total_debt
         return context
