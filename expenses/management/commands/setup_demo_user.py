@@ -11,6 +11,9 @@ from expenses.models import (
     Expense,
     GoalContribution,
     Income,
+    Loan,
+    LoanInterestRate,
+    LoanRepayment,
     RecurringTransaction,
     SavingsGoal,
     Transfer,
@@ -20,6 +23,24 @@ from expenses.models import (
 
 class Command(BaseCommand):
     help = 'Sets up a read-only pro demo user with a rich, multi-month financial story'
+
+    @staticmethod
+    def _next_month_start(dt):
+        return (dt.replace(day=28) + timedelta(days=4)).replace(day=1)
+
+    @staticmethod
+    def _calculate_emi(principal, annual_rate, months):
+        principal = Decimal(str(principal or 0))
+        annual_rate = Decimal(str(annual_rate or 0))
+        if principal <= 0 or months <= 0:
+            return Decimal('0.00')
+        if annual_rate == 0:
+            return (principal / Decimal(months)).quantize(Decimal('0.01'))
+
+        monthly_rate = annual_rate / Decimal('12') / Decimal('100')
+        one_plus_r_pow_n = (Decimal('1') + monthly_rate) ** int(months)
+        emi = principal * monthly_rate * one_plus_r_pow_n / (one_plus_r_pow_n - Decimal('1'))
+        return emi.quantize(Decimal('0.01'))
 
     def handle(self, *args, **kwargs):
         username = 'demo'
@@ -48,32 +69,34 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'Created user: {username} (PRO Tier)'))
         
         # 1.1 Setup Accounts
+        # Keep starting balances at 0 and seed via income/transfers so account balances
+        # are backed by ledger-posted transactions and reconcile cleanly.
         acc_main = Account.objects.create(
             user=user, 
             name="HDFC Bank (Main)", 
             account_type='BANK', 
-            balance=Decimal('150000.00'), 
+            balance=Decimal('0.00'), 
             currency='₹'
         )
         acc_savings = Account.objects.create(
             user=user, 
             name="SBI Savings", 
             account_type='BANK', 
-            balance=Decimal('80000.00'), 
+            balance=Decimal('0.00'), 
             currency='₹'
         )
         acc_cash = Account.objects.create(
             user=user, 
             name="Cash Wallet", 
             account_type='CASH', 
-            balance=Decimal('75000.00'), 
+            balance=Decimal('0.00'), 
             currency='₹'
         )
         acc_invest = Account.objects.create(
             user=user, 
             name="Zerodha Demat", 
             account_type='INVESTMENT', 
-            balance=Decimal('120000.00'), 
+            balance=Decimal('0.00'), 
             currency='₹'
         )
 
@@ -113,6 +136,16 @@ class Command(BaseCommand):
         # 3. Time Windows (Last 3 months)
         today = date.today()
         three_months_ago = (today.replace(day=1) - timedelta(days=125)).replace(day=1) 
+
+        # 3.1 Seed opening balance through an Income (ledger-backed) instead of direct account balance.
+        Income.objects.create(
+            user=user,
+            source='Opening Balance',
+            amount=Decimal('450000.00'),
+            date=three_months_ago - timedelta(days=1),
+            description='Demo seed corpus',
+            account=acc_main,
+        )
         
         # 4. Income History
         income_sources = [
@@ -135,8 +168,7 @@ class Command(BaseCommand):
                         account=acc_main
                     )
             # Next Month
-            next_month = curr_month.replace(day=28) + timedelta(days=4)
-            curr_month = next_month.replace(day=1)
+            curr_month = self._next_month_start(curr_month)
 
         self.stdout.write(self.style.SUCCESS('Generated 3-Month Income History'))
 
@@ -249,9 +281,9 @@ class Command(BaseCommand):
             # Add periodic contributions to show progress
             total_contrib = 0
             if 'Emergency' in goal.name:
-                total_contrib = 60000 # ~20k/month
-            elif 'MacBook' in goal.name:
-                total_contrib = 15000 # ~5k/month
+                total_contrib = 60000  # ~20k/month
+            elif 'iPad' in goal.name:
+                total_contrib = 15000  # ~5k/month
             
             if total_contrib > 0:
                 # Break it into 3 monthly parts
@@ -267,13 +299,13 @@ class Command(BaseCommand):
                         date=contrib_date,
                         description=f"Savings for {goal.name}"
                     )
-                    # Contribution now specifies an account and deducts balance directly
-                    # We deduct from the savings account where the money was moved
+                    # Keep contribution account null so goal progress is visible without
+                    # a second balance mutation that can drift from ledger postings.
                     GoalContribution.objects.create(
                         goal=goal,
                         amount=part,
                         date=contrib_date,
-                        account=acc_savings
+                        account=None
                     )
 
         # Monthly ATM Withdrawals
@@ -290,12 +322,81 @@ class Command(BaseCommand):
                     description="ATM Withdrawal"
                 )
             # Next Month
-            next_month = curr_month.replace(day=28) + timedelta(days=4)
-            curr_month = next_month.replace(day=1)
+            curr_month = self._next_month_start(curr_month)
 
         self.stdout.write(self.style.SUCCESS('Created Savings Goals, Contributions and Monthly Transfers'))
 
-        # 7. Recurring Transactions (The Alerts)
+        # 7. Demo Loans & Repayments
+        home_loan_start = (today.replace(day=1) - timedelta(days=240)).replace(day=7)
+        personal_loan_start = (today.replace(day=1) - timedelta(days=150)).replace(day=12)
+
+        home_loan = Loan.objects.create(
+            user=user,
+            name='Home Renovation Loan',
+            loan_type='HOME',
+            initial_principal=Decimal('300000.00'),
+            duration_months=60,
+            start_date=home_loan_start,
+            currency='₹',
+        )
+        LoanInterestRate.objects.create(
+            loan=home_loan,
+            interest_rate=Decimal('9.25'),
+            effective_date=home_loan_start,
+        )
+
+        personal_loan = Loan.objects.create(
+            user=user,
+            name='Travel Personal Loan',
+            loan_type='PERSONAL',
+            initial_principal=Decimal('120000.00'),
+            duration_months=24,
+            start_date=personal_loan_start,
+            currency='₹',
+        )
+        LoanInterestRate.objects.create(
+            loan=personal_loan,
+            interest_rate=Decimal('13.50'),
+            effective_date=personal_loan_start,
+        )
+
+        def add_repayments(loan, annual_rate, months_to_add, day_of_month):
+            remaining = Decimal(str(loan.initial_principal))
+            emi = self._calculate_emi(remaining, annual_rate, loan.duration_months)
+            repayment_month = loan.start_date
+
+            for _ in range(months_to_add):
+                payment_date = repayment_month.replace(day=min(day_of_month, 28))
+                if payment_date > today:
+                    break
+
+                monthly_rate = Decimal(str(annual_rate)) / Decimal('12') / Decimal('100')
+                interest = (remaining * monthly_rate).quantize(Decimal('0.01'))
+                principal = (emi - interest).quantize(Decimal('0.01'))
+
+                if principal > remaining:
+                    principal = remaining
+                    emi_amount = (principal + interest).quantize(Decimal('0.01'))
+                else:
+                    emi_amount = emi
+
+                LoanRepayment.objects.create(
+                    loan=loan,
+                    from_account=acc_main,
+                    amount=emi_amount,
+                    principal_portion=principal,
+                    interest_portion=interest,
+                    date=payment_date,
+                )
+                remaining = (remaining - principal).quantize(Decimal('0.01'))
+                repayment_month = self._next_month_start(repayment_month)
+
+        add_repayments(home_loan, Decimal('9.25'), months_to_add=5, day_of_month=7)
+        add_repayments(personal_loan, Decimal('13.50'), months_to_add=4, day_of_month=12)
+
+        self.stdout.write(self.style.SUCCESS('Created demo loans with repayment history'))
+
+        # 8. Recurring Transactions (The Alerts)
         
         # Fiber Internet (Due in 3 days)
         RecurringTransaction.objects.create(
@@ -317,7 +418,7 @@ class Command(BaseCommand):
             transaction_type='EXPENSE',
             amount=2500,
             description='Gold\'s Gym Membership',
-            category='Health' if 'Health' in cat_objs else 'Wants',
+            category='Health' if 'Health' in cat_objs else 'Other',
             frequency='MONTHLY',
             start_date=three_months_ago - timedelta(days=100),
             last_processed_date=three_months_ago - timedelta(days=10),
