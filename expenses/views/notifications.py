@@ -1,3 +1,5 @@
+import hmac
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -6,18 +8,30 @@ from django.core.management import call_command
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 
 from ..models import Notification
 
 
 def _cron_authorized(request):
-    secret = request.GET.get('secret')
-    return bool(secret and secret == settings.CRON_SECRET)
+    # Prefer header to avoid leaking secrets through URL logs.
+    provided_secret = request.headers.get('X-Cron-Secret') or request.POST.get('secret')
+    if settings.CRON_ALLOW_QUERY_SECRET:
+        provided_secret = provided_secret or request.GET.get('secret')
+
+    expected_secret = (settings.CRON_SECRET or '').strip()
+    provided_secret = (provided_secret or '').strip()
+    if not expected_secret:
+        return False
+
+    return hmac.compare_digest(provided_secret, expected_secret)
 
 
-def _get_int_query_param(request, key, default):
-    raw = request.GET.get(key)
+def _get_int_param(request, key, default):
+    raw = request.POST.get(key)
+    if raw in (None, ''):
+        raw = request.GET.get(key)
     if raw in (None, ''):
         return default
     try:
@@ -26,8 +40,10 @@ def _get_int_query_param(request, key, default):
         return default
 
 
-def _get_threshold_query_param(request, default):
-    raw = request.GET.get('threshold')
+def _get_threshold_param(request, default):
+    raw = request.POST.get('threshold')
+    if raw in (None, ''):
+        raw = request.GET.get('threshold')
     if raw in (None, ''):
         return default
     try:
@@ -85,12 +101,12 @@ def notification_redirect(request, pk):
         return redirect('notification-list')
 
 @csrf_exempt
+@require_POST
 def trigger_notifications(request):
     """
     HTTP endpoint to trigger notifications via external cron service.
     """
-    secret = request.GET.get('secret')
-    if not secret or secret != settings.CRON_SECRET:
+    if not _cron_authorized(request):
         return JsonResponse({'error': 'Unauthorized'}, status=403)
         
     try:
@@ -100,12 +116,12 @@ def trigger_notifications(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
+@require_POST
 def trigger_lifecycle_emails(request):
     """
     HTTP endpoint to trigger lifecycle drip emails via external cron service.
     """
-    secret = request.GET.get('secret')
-    if not secret or secret != settings.CRON_SECRET:
+    if not _cron_authorized(request):
         return JsonResponse({'error': 'Unauthorized'}, status=403)
 
     try:
@@ -115,12 +131,12 @@ def trigger_lifecycle_emails(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
+@require_POST
 def trigger_monthly_reports_view(request):
     """
     HTTP endpoint to trigger monthly financial reports via external cron service.
     """
-    secret = request.GET.get('secret')
-    if not secret or secret != settings.CRON_SECRET:
+    if not _cron_authorized(request):
         return JsonResponse({'error': 'Unauthorized'}, status=403)
 
     try:
@@ -130,12 +146,12 @@ def trigger_monthly_reports_view(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
+@require_POST
 def trigger_daily_reminders_view(request):
     """
     HTTP endpoint to trigger daily expense reminders via external cron service.
     """
-    secret = request.GET.get('secret')
-    if not secret or secret != settings.CRON_SECRET:
+    if not _cron_authorized(request):
         return JsonResponse({'error': 'Unauthorized'}, status=403)
 
     try:
@@ -146,6 +162,7 @@ def trigger_daily_reminders_view(request):
 
 
 @csrf_exempt
+@require_POST
 def trigger_ledger_retry_view(request):
     """
     HTTP endpoint to retry failed ledger shadow postings via external cron service.
@@ -155,7 +172,7 @@ def trigger_ledger_retry_view(request):
     if not _cron_authorized(request):
         return JsonResponse({'error': 'Unauthorized'}, status=403)
 
-    limit = _get_int_query_param(request, 'limit', 200)
+    limit = _get_int_param(request, 'limit', 200)
     try:
         call_command('retry_ledger_shadow_failures', limit=limit)
         return JsonResponse(
@@ -170,6 +187,7 @@ def trigger_ledger_retry_view(request):
 
 
 @csrf_exempt
+@require_POST
 def trigger_ledger_reconcile_view(request):
     """
     HTTP endpoint to reconcile ledger/account balances via external cron service.
@@ -179,7 +197,7 @@ def trigger_ledger_reconcile_view(request):
     if not _cron_authorized(request):
         return JsonResponse({'error': 'Unauthorized'}, status=403)
 
-    threshold = _get_threshold_query_param(request, '0.01')
+    threshold = _get_threshold_param(request, '0.01')
     try:
         call_command('reconcile_ledgers', threshold=threshold)
         return JsonResponse(
@@ -194,6 +212,7 @@ def trigger_ledger_reconcile_view(request):
 
 
 @csrf_exempt
+@require_POST
 def trigger_ledger_maintenance_view(request):
     """
     HTTP endpoint to run combined ledger maintenance via external cron service.
@@ -204,8 +223,8 @@ def trigger_ledger_maintenance_view(request):
     if not _cron_authorized(request):
         return JsonResponse({'error': 'Unauthorized'}, status=403)
 
-    retry_limit = _get_int_query_param(request, 'retry_limit', 200)
-    threshold = _get_threshold_query_param(request, '0.01')
+    retry_limit = _get_int_param(request, 'retry_limit', 200)
+    threshold = _get_threshold_param(request, '0.01')
     try:
         call_command(
             'run_ledger_maintenance',

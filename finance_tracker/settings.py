@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 import os
 import sys
+from urllib.parse import urlparse
 from pathlib import Path
 
 import dj_database_url
@@ -46,18 +47,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-# Secret for triggered cron jobs (URL-safe)
-CRON_SECRET = os.getenv('CRON_SECRET', 'change_me_in_prod')
+# Secret for triggered cron jobs.
+# Must be set in environment; empty value disables cron HTTP triggers.
+CRON_SECRET = os.getenv('CRON_SECRET', '').strip()
+
+# Allow ?secret=... in cron URLs only when explicitly enabled.
+# Keep disabled by default to avoid secret leakage via logs/history.
+CRON_ALLOW_QUERY_SECRET = os.getenv('CRON_ALLOW_QUERY_SECRET', 'False').lower() in {'1', 'true', 'yes', 'on'}
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+DEBUG = os.getenv('DEBUG', 'False').lower() in {'1', 'true', 'yes', 'on'}
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get(
+    'ALLOWED_HOSTS',
+    'trackmyrupee.com,www.trackmyrupee.com,localhost,127.0.0.1'
+).split(',') if host.strip()]
 
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://trackmyrupee.com,https://www.trackmyrupee.com,https://django-finance-tracker-fr1u.onrender.com').split(',')
 
 # Absolute URL for generating links in background tasks (emails, push)
 SITE_URL = os.environ.get('SITE_URL', 'https://trackmyrupee.com').rstrip('/')
+
+# Include SITE_URL host for safety when ALLOWED_HOSTS is not explicitly set.
+site_url_host = urlparse(SITE_URL).hostname
+if site_url_host and site_url_host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(site_url_host)
 
 # Application definition
 
@@ -304,6 +318,9 @@ if not DEBUG:
     # Additional Security Headers
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
     # Ensure Allauth builds HTTPS links
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
@@ -315,6 +332,7 @@ else:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
+    SECURE_HSTS_SECONDS = 0
 
 # Google reCAPTCHA v3 Settings
 RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY', '')

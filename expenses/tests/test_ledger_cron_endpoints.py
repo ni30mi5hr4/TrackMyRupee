@@ -7,22 +7,27 @@ from django.urls import reverse
 @override_settings(CRON_SECRET='test-secret')
 class LedgerCronEndpointTest(TestCase):
     def test_retry_endpoint_requires_secret(self):
-        response = self.client.get(reverse('cron-ledger-retry-failures'))
+        response = self.client.post(reverse('cron-ledger-retry-failures'))
         self.assertEqual(response.status_code, 403)
 
     def test_reconcile_endpoint_requires_secret(self):
-        response = self.client.get(reverse('cron-ledger-reconcile'))
+        response = self.client.post(reverse('cron-ledger-reconcile'))
         self.assertEqual(response.status_code, 403)
 
     def test_maintenance_endpoint_requires_secret(self):
-        response = self.client.get(reverse('cron-ledger-maintenance'))
+        response = self.client.post(reverse('cron-ledger-maintenance'))
         self.assertEqual(response.status_code, 403)
+
+    def test_retry_endpoint_rejects_get_method(self):
+        response = self.client.get(reverse('cron-ledger-retry-failures'))
+        self.assertEqual(response.status_code, 405)
 
     @patch('expenses.views.notifications.call_command')
     def test_retry_endpoint_calls_command_with_limit(self, mock_call_command):
-        response = self.client.get(
+        response = self.client.post(
             reverse('cron-ledger-retry-failures'),
-            {'secret': 'test-secret', 'limit': '150'},
+            {'limit': '150'},
+            HTTP_X_CRON_SECRET='test-secret',
         )
 
         self.assertEqual(response.status_code, 200)
@@ -33,9 +38,10 @@ class LedgerCronEndpointTest(TestCase):
 
     @patch('expenses.views.notifications.call_command')
     def test_retry_endpoint_invalid_limit_falls_back_to_default(self, mock_call_command):
-        response = self.client.get(
+        response = self.client.post(
             reverse('cron-ledger-retry-failures'),
-            {'secret': 'test-secret', 'limit': 'not-a-number'},
+            {'limit': 'not-a-number'},
+            HTTP_X_CRON_SECRET='test-secret',
         )
 
         self.assertEqual(response.status_code, 200)
@@ -46,9 +52,10 @@ class LedgerCronEndpointTest(TestCase):
 
     @patch('expenses.views.notifications.call_command')
     def test_reconcile_endpoint_calls_command_with_threshold(self, mock_call_command):
-        response = self.client.get(
+        response = self.client.post(
             reverse('cron-ledger-reconcile'),
-            {'secret': 'test-secret', 'threshold': '0.05'},
+            {'threshold': '0.05'},
+            HTTP_X_CRON_SECRET='test-secret',
         )
 
         self.assertEqual(response.status_code, 200)
@@ -59,9 +66,10 @@ class LedgerCronEndpointTest(TestCase):
 
     @patch('expenses.views.notifications.call_command')
     def test_reconcile_endpoint_invalid_threshold_falls_back_to_default(self, mock_call_command):
-        response = self.client.get(
+        response = self.client.post(
             reverse('cron-ledger-reconcile'),
-            {'secret': 'test-secret', 'threshold': 'bad-threshold'},
+            {'threshold': 'bad-threshold'},
+            HTTP_X_CRON_SECRET='test-secret',
         )
 
         self.assertEqual(response.status_code, 200)
@@ -72,9 +80,9 @@ class LedgerCronEndpointTest(TestCase):
 
     @patch('expenses.views.notifications.call_command')
     def test_maintenance_endpoint_calls_command_with_defaults(self, mock_call_command):
-        response = self.client.get(
+        response = self.client.post(
             reverse('cron-ledger-maintenance'),
-            {'secret': 'test-secret'},
+            HTTP_X_CRON_SECRET='test-secret',
         )
 
         self.assertEqual(response.status_code, 200)
@@ -91,9 +99,10 @@ class LedgerCronEndpointTest(TestCase):
 
     @patch('expenses.views.notifications.call_command')
     def test_maintenance_endpoint_calls_command_with_custom_params(self, mock_call_command):
-        response = self.client.get(
+        response = self.client.post(
             reverse('cron-ledger-maintenance'),
-            {'secret': 'test-secret', 'retry_limit': '75', 'threshold': '0.1'},
+            {'retry_limit': '75', 'threshold': '0.1'},
+            HTTP_X_CRON_SECRET='test-secret',
         )
 
         self.assertEqual(response.status_code, 200)
