@@ -1303,7 +1303,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="fw-bold text-info" style="font-size: 0.95rem;">{% trans "Exactly on budget" %}</span>
                         </div>
                     {% endif %}
-                    <div class="text-muted mt-1" style="font-size: 0.7rem;">{% trans "vs ideal pace for day" %} {{ salary_breakdown.spending_pace.days_elapsed|translate_digits }}/{{ salary_breakdown.spending_pace.num_days|translate_digits }}</div>
+                    <div class="text-muted mt-1" style="font-size: 0.7rem;">{% trans "vs ideal pace" %} ({{ salary_breakdown.spending_pace.days_elapsed|translate_digits }}/{{ salary_breakdown.spending_pace.num_days|translate_digits }})</div>
                 </div>
                 {% endif %}
 
@@ -1311,11 +1311,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 {% if salary_breakdown.spending_pace.daily_spending_pace > 0 %}
                 <div class="text-center mb-3">
                     <h2 class="fw-black mb-0 p-0 text-body-emphasis" style="font-size: 1.5rem;">{{ currency_symbol }}{{ salary_breakdown.spending_pace.daily_spending_pace|compact_amount:currency_symbol|translate_digits }} <span class="fs-6 fw-normal text-muted">/ {% trans "day" %}</span></h2>
-                    <small class="text-muted text-uppercase fw-bold opacity-75" style="letter-spacing: 0.5px; font-size: 0.65rem;">{% trans "Your Burn Rate" %}</small>
+                    <small class="text-muted text-uppercase fw-bold opacity-75" style="letter-spacing: 0.5px; font-size: 0.65rem;">{% trans "Burn Rate" %}</small>
                     {% if salary_breakdown.spending_pace.burn_diff_pct is not None %}
                     <div class="mt-2">
                         <span class="badge {% if salary_breakdown.spending_pace.burn_diff_pct > 0 %}bg-danger{% else %}bg-success{% endif %} bg-opacity-10 {% if salary_breakdown.spending_pace.burn_diff_pct > 0 %}text-danger{% else %}text-success{% endif %} rounded-pill px-2 py-1" style="font-size: 0.75rem;">
-                            {% if salary_breakdown.spending_pace.burn_diff_pct > 0 %}↑{% else %}↓{% endif %} {{ salary_breakdown.spending_pace.burn_diff_pct_abs|floatformat:0|translate_digits }}% {% if salary_breakdown.spending_pace.burn_diff_pct > 0 %}{% trans "higher" %}{% else %}{% trans "lower" %}{% endif %} <span class="opacity-75 fw-normal">{% trans "than last month" %}</span>
+                            {% if salary_breakdown.spending_pace.burn_diff_pct > 0 %}↑{% else %}↓{% endif %} {{ salary_breakdown.spending_pace.burn_diff_pct_abs|floatformat:0|translate_digits }}% <span class="opacity-75 fw-normal">{% trans "vs last month" %}</span>
                         </span>
                     </div>
                     {% endif %}
@@ -1361,7 +1361,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="bg-secondary bg-opacity-10 rounded-4 p-3 mb-2 text-center">
                     <small class="text-muted text-uppercase fw-bold d-block mb-1" style="letter-spacing: 0.5px; font-size: 0.65rem;">{% trans "Projected Monthly Spend" %}</small>
                     <div class="fw-black mb-1 text-body-emphasis lh-1" style="font-size: 1.3rem;">{{ currency_symbol }}{{ salary_breakdown.spending_pace.projected_month_spend|floatformat:0|humanize_currency:currency_symbol|translate_digits }}</div>
-                    <a href="{% url 'budget' %}" class="text-primary small text-decoration-none fw-bold d-inline-flex align-items-center"><i class="bi bi-plus-circle me-1"></i>{% trans "Set a budget to track pace" %}</a>
+                    <a href="{% url 'budget' %}" class="text-primary small text-decoration-none fw-bold d-inline-flex align-items-center"><i class="bi bi-plus-circle me-1"></i>{% trans "Set budget to track pace" %}</a>
                 </div>
                 {% else %}
                 <!-- No budget AND no spending data yet this month -->
@@ -1532,7 +1532,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                       data-bs-toggle="tooltip" 
                                       title="{% trans 'The actual amount of currency saved compared to last month.' %}">
                                     {% if hero_metrics.savings_diff_pct > 0 %}↑{% else %}↓{% endif %} {{ hero_metrics.savings_diff_pct_abs|translate_digits|floatformat:1 }}% 
-                                    {% trans "total cash vs last month" %}
+                                    {% trans "cash saved vs last month" %}
                                 </span>
                                 {% endif %}
                             </div>
@@ -1569,7 +1569,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <a href="{% url 'expense-list' %}?{% url_replace is_investment='false' %}" class="col-6 px-2 text-decoration-none transition-all">
                         <small class="text-muted text-uppercase fw-bold d-block mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;"
                                data-bs-toggle="tooltip" data-bs-placement="top" title="{% trans 'Total daily living expenses, excluding investments and transfers.' %}">
-                            {% trans "Operating Spent" %}
+                            {% trans "Operating Spend" %}
                             <i class="bi bi-info-circle ms-1" style="font-size: 0.6rem; opacity: 0.6;"></i>
                         </small>
                         <div class="fw-bold mb-0 text-body text-truncate" style="font-size: 0.95rem;">{{ currency_symbol }}{{ hero_metrics.spent|floatformat:0|humanize_currency:currency_symbol|translate_digits }}</div>
@@ -1597,7 +1597,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </span>
                         <i class="bi bi-chevron-right text-muted ms-auto" style="font-size: 0.65rem;"></i>
                     </a>
-                    <div class="text-muted text-center mt-1" style="font-size: 0.7rem;">{% trans "Internal transfers are excluded from income & expenses" %}</div>
+                    <div class="text-muted text-center mt-1" style="font-size: 0.7rem;">{% trans "Internal transfers excluded from income/expenses" %}</div>
                 </div>
                 {% endif %}
             </div>
@@ -2195,6 +2195,8 @@ document.addEventListener('DOMContentLoaded', function() {
             '#F49C8C'  // Coral light
         ];
 
+        const formatCurrencyCompact = (value) => '{{ currency_symbol }}' + window.compactAmount(value, '{{ currency_symbol }}');
+
         // --- 0. Income vs Expenses Chart (SVG Animation) ---
         const totalIncome = {{ total_income|stringformat:"f"|default:0 }};
         const totalExpenses = {{ total_expenses|stringformat:"f"|default:0 }};
@@ -2327,13 +2329,18 @@ document.addEventListener('DOMContentLoaded', function() {
                                     tooltipEl.innerHTML = innerHtml;
                                 }
                                 tooltipEl.style.opacity = 1;
-                                tooltipEl.style.left = tooltipModel.caretX + 'px';
+                                const tooltipWidth = tooltipEl.offsetWidth || 140;
+                                const clampedX = Math.max(
+                                    tooltipWidth / 2 + 8,
+                                    Math.min(tooltipModel.caretX, context.chart.width - tooltipWidth / 2 - 8)
+                                );
+                                tooltipEl.style.left = clampedX + 'px';
                                 tooltipEl.style.top = (tooltipModel.caretY - 10) + 'px';
                                 tooltipEl.style.transform = 'translate(-50%, -100%)';
                             },
                             callbacks: {
                                 label: function(context) {
-                                    return '{{ currency_symbol }}' + window.compactAmount(context.parsed.y, '{{ currency_symbol }}');
+                                    return formatCurrencyCompact(context.parsed.y);
                                 }
                             }
                         }
@@ -2424,11 +2431,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true, pointStyle: 'line', font: { size: 11 } } },
+                        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14, usePointStyle: true, pointStyle: 'line', font: { size: 11 } } },
                         tooltip: {
                             callbacks: {
                                 label: function(ctx) {
-                                    return ctx.dataset.label + ': {{ currency_symbol }}' + window.compactAmount(ctx.parsed.y, '{{ currency_symbol }}');
+                                    return ctx.dataset.label + ': ' + formatCurrencyCompact(ctx.parsed.y);
                                 }
                             }
                         }
@@ -2456,12 +2463,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     scales: {
                         x: {
                             grid: { display: false },
-                            ticks: { autoSkip: true, maxRotation: 45, minRotation: 0, font: { size: 11 } }
+                            ticks: { autoSkip: true, maxTicksLimit: 7, maxRotation: 45, minRotation: 0, font: { size: 11 } }
                         },
                         y: {
                             grid: { color: currentColors.grid },
                             beginAtZero: true,
-                            ticks: { callback: (val) => translateDigits(val) }
+                            ticks: { callback: (val) => formatCurrencyCompact(val) }
                         }
                     }
                 }
@@ -2479,7 +2486,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } },
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14, font: { size: 11 } } } },
                     onHover: (event, chartElement, chart) => {
                         const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false }, true);
                         event.native.target.style.cursor = points[0] ? 'pointer' : 'default';
@@ -2509,13 +2516,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         x: {
                             stacked: false,
                             grid: { display: false },
-                            ticks: { autoSkip: true, maxRotation: 45, minRotation: 0, font: { size: 11 } }
+                            ticks: { autoSkip: true, maxTicksLimit: 7, maxRotation: 45, minRotation: 0, font: { size: 11 } }
                         },
                         y: {
                             stacked: false,
                             grid: { color: currentColors.grid },
                             beginAtZero: true,
-                            ticks: { callback: (val) => translateDigits(val) }
+                            ticks: { callback: (val) => formatCurrencyCompact(val) }
                         }
                     }
                 }
@@ -2580,7 +2587,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.dataset.label + ': {{ currency_symbol }}' + window.compactAmount(context.parsed.x, '{{ currency_symbol }}');
+                                    return context.dataset.label + ': ' + formatCurrencyCompact(context.parsed.x);
                                 }
                             }
                         }
@@ -2740,16 +2747,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     maintainAspectRatio: false,
                     cutout: '65%',
                     plugins: { 
-                        legend: { position: 'bottom', labels: { boxWidth: 12, font: {size: 11} } },
+                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
                                     let label = context.label || '';
+                                    const total = context.dataset.data.reduce((sum, v) => sum + v, 0);
+                                    const pct = total > 0 ? ((context.parsed / total) * 100).toFixed(0) : '0';
                                     if (label) {
                                         label += ': ';
                                     }
                                     if (context.parsed !== null) {
-                                        label += '{{ currency_symbol }}' + window.compactAmount(context.parsed, '{{ currency_symbol }}');
+                                        label += formatCurrencyCompact(context.parsed) + ' (' + translateDigits(pct) + '%)';
                                     }
                                     return label;
                                 }
@@ -2854,11 +2863,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 title: (c) => c[0].label,
                                 label: (c) => {
                                     const item = withLimits[c.dataIndex];
-                                    if (c.dataset.label === '{% trans "Spent" %}') return `{% trans "Spent" %}: {{ currency_symbol }}${window.compactAmount(item.total, '{{ currency_symbol }}')} (${translateDigits(item.used_percent)}%)`;
+                                    if (c.dataset.label === '{% trans "Spent" %}') return `{% trans "Spent" %}: ${formatCurrencyCompact(item.total)} (${translateDigits(item.used_percent)}%)`;
                                     const remaining = Math.max(0, item.limit - item.total);
-                                    return `{% trans "Remaining" %}: {{ currency_symbol }}${window.compactAmount(remaining, '{{ currency_symbol }}')}`;
+                                    return `{% trans "Remaining" %}: ${formatCurrencyCompact(remaining)}`;
                                 },
-                                footer: (c) => `{% trans "Limit" %}: {{ currency_symbol }}${window.compactAmount(withLimits[c[0].dataIndex].limit, '{{ currency_symbol }}')}`
+                                footer: (c) => `{% trans "Limit" %}: ${formatCurrencyCompact(withLimits[c[0].dataIndex].limit)}`
                             }
                         }
                     },
@@ -2950,7 +2959,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                  const value = context.raw;
                                                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                                  const pct = ((value / total) * 100).toFixed(1);
-                                                 return ` ${context.label}: {{ currency_symbol }}${window.compactAmount(value, '{{ currency_symbol }}')} (${translateDigits(pct)}%)`;
+                                                     return ` ${context.label}: ${formatCurrencyCompact(value)} (${translateDigits(pct)}%)`;
                                              }
                                          }
                                      }
@@ -3085,7 +3094,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                      grid: { color: currentColors.grid },
                                      ticks: { 
                                          font: { size: 10 },
-                                         callback: (val) => window.compactAmount(val, '{{ currency_symbol }}')
+                                         callback: (val) => formatCurrencyCompact(val)
                                      },
                                      beginAtZero: true
                                  }
