@@ -1,0 +1,602 @@
+{% load i18n %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Loan EMI Calculator" %} - TrackMyRupee</title>
+    <meta name="description" content="Free Loan EMI Calculator for India. Calculate monthly EMI, total interest, total payment, and prepayment impact instantly. Home loan, car loan, and personal loan support.">
+    <meta name="keywords" content="loan emi calculator india, home loan emi calculator, personal loan calculator, car loan emi calculator, prepayment calculator, amortization schedule india">
+    <meta name="author" content="Omkar Pathak">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <link rel="canonical" href="https://trackmyrupee.com/loan-emi-calculator/">
+
+    <link rel="alternate" hreflang="en" href="https://trackmyrupee.com/loan-emi-calculator/">
+    <link rel="alternate" hreflang="hi" href="https://trackmyrupee.com/loan-emi-calculator/">
+    <link rel="alternate" hreflang="mr" href="https://trackmyrupee.com/loan-emi-calculator/">
+    <link rel="alternate" hreflang="x-default" href="https://trackmyrupee.com/loan-emi-calculator/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrackMyRupee">
+    <meta property="og:url" content="https://trackmyrupee.com/loan-emi-calculator/">
+    <meta property="og:title" content="Loan EMI Calculator (India) - TrackMyRupee">
+    <meta property="og:description" content="Calculate EMI, interest outgo, and month-end repayment plan in seconds. Includes prepayment impact and amortization preview.">
+    <meta property="og:image" content="https://trackmyrupee.com/static/img/og-preview-v2.png?v=2.0">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="en_IN">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Loan EMI Calculator (India) - TrackMyRupee">
+    <meta name="twitter:description" content="Free EMI calculator with prepayment impact, amortization, and total interest breakdown.">
+    <meta name="twitter:image" content="https://trackmyrupee.com/static/img/og-preview-v2.png?v=2.0">
+    <meta name="twitter:url" content="https://trackmyrupee.com/loan-emi-calculator/">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Loan EMI Calculator",
+      "url": "https://trackmyrupee.com/loan-emi-calculator/",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web",
+      "publisher": {
+        "@type": "Organization",
+        "name": "TrackMyRupee",
+        "url": "https://trackmyrupee.com"
+      },
+      "description": "Free EMI calculator for Indian borrowers. Get EMI, total interest, and prepayment impact instantly.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
+      }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://trackmyrupee.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Loan EMI Calculator",
+          "item": "https://trackmyrupee.com/loan-emi-calculator/"
+        }
+      ]
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is EMI in a loan?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "EMI is the fixed monthly amount you pay to repay a loan. It includes both principal and interest."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is EMI calculated?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "EMI uses the formula E = P * r * (1+r)^n / ((1+r)^n - 1), where P is principal, r is monthly interest rate, and n is total months."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does prepayment reduce EMI or tenure?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Usually prepayment reduces outstanding principal and either shortens tenure or lowers EMI depending on lender policy."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <link rel="icon" type="image/svg+xml" href="{% static 'icon.svg' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+      :root {
+        --tmr-teal-400: #1D9E75;
+        --tmr-teal-600: #0F6E56;
+        --tmr-teal-50: #E1F5EE;
+        --tmr-ink-900: #1A1A19;
+        --tmr-ink-600: #6B6B68;
+        --tmr-ink-400: #9E9D9A;
+        --tmr-surface-0: #faf9f6;
+        --tmr-surface-2: #f1f1ee;
+        --tmr-surface-3: #D4D4D2;
+      }
+
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: var(--tmr-ink-900);
+        background: var(--tmr-surface-0);
+      }
+
+      .landing-nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(250, 249, 246, 0.93);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--tmr-surface-3);
+      }
+
+      .nav-logo {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--tmr-ink-900);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        list-style: none;
+      }
+
+      .nav-links a {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--tmr-ink-600);
+        text-decoration: none;
+      }
+
+      .nav-links a:hover {
+        color: var(--tmr-ink-900);
+      }
+
+      .nav-cta {
+        background: var(--tmr-ink-900);
+        color: #fff !important;
+        padding: 10px 24px;
+        border-radius: 99px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background .2s, transform .15s;
+      }
+
+      .nav-cta:hover {
+        background: var(--tmr-teal-400) !important;
+        transform: translateY(-1px);
+      }
+
+      .mobile-nav-actions {
+        display: none;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .hamburger {
+        background: none;
+        border: none;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        padding: 4px;
+        z-index: 101;
+        margin-right: -4px;
+      }
+
+      .hamburger span {
+        display: block;
+        width: 100%;
+        height: 2px;
+        background: var(--tmr-ink-900);
+        border-radius: 2px;
+        transition: all 0.3s ease;
+      }
+
+      .hamburger.active span:nth-child(1) {
+        transform: translateY(8px) rotate(45deg);
+      }
+
+      .hamburger.active span:nth-child(2) {
+        opacity: 0;
+      }
+
+      .hamburger.active span:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg);
+      }
+
+      .mobile-menu {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--tmr-surface-0);
+        z-index: 100;
+        padding: 100px 32px;
+        transform: translateX(100%);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .mobile-menu.active {
+        transform: translateX(0);
+      }
+
+      .mobile-menu a {
+        font-size: 20px;
+        font-weight: 500;
+        color: var(--tmr-ink-900);
+        text-decoration: none;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--tmr-surface-3);
+      }
+
+      .mobile-menu .nav-cta {
+        text-align: center;
+        margin-top: 10px;
+        border-bottom: none;
+      }
+
+      @media (max-width: 991px) {
+        .nav-links {
+          display: none !important;
+        }
+
+        .mobile-nav-actions {
+          display: flex;
+        }
+      }
+
+      .calc-hero {
+        background: var(--tmr-teal-50);
+        border-bottom: 1px solid var(--tmr-surface-3);
+      }
+
+      .calc-hero h1 {
+        font-size: clamp(2rem, 3.2vw, 2.6rem);
+        letter-spacing: -0.02em;
+      }
+
+      .calc-hero .lead {
+        font-size: 1.03rem;
+        line-height: 1.55;
+        color: var(--tmr-ink-600);
+      }
+
+      .calc-panel {
+        background: #fff;
+        color: black;
+        border: 1px solid var(--tmr-surface-3);
+        border-radius: 16px;
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.04);
+      }
+
+      .result-card {
+        background: var(--tmr-surface-2);
+        border: 1px solid var(--tmr-surface-3);
+        border-radius: 14px;
+      }
+
+      .kpi-label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--tmr-ink-600);
+        font-weight: 700;
+      }
+
+      .kpi-value {
+        font-size: clamp(1.15rem, 2.5vw, 1.75rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .calc-panel h2.h4 {
+        font-size: 1.5rem;
+      }
+
+      .calc-panel .fs-4 {
+        font-size: 1.4rem !important;
+      }
+
+      @media (max-width: 768px) {
+        .calc-hero h1 {
+          font-size: 1.9rem;
+        }
+
+        .calc-hero .lead {
+          font-size: 1rem;
+        }
+      }
+
+      .formula-box {
+        border: 1px solid var(--tmr-teal-400);
+        background: #fff;
+        padding: 14px 16px;
+        border-radius: 8px;
+      }
+
+      .seo-copy h2 {
+        font-size: 1.35rem;
+        font-weight: 800;
+      }
+
+      .seo-copy p,
+      .seo-copy li {
+        color: var(--tmr-ink-600);
+        line-height: 1.75;
+      }
+
+      .landing-footer {
+        background: var(--tmr-surface-0);
+        border-top: 1px solid var(--tmr-surface-3);
+      }
+    </style>
+</head>
+<body>
+  {% include "components/public_navbar.html" with is_landing=False %}
+
+  <header class="calc-hero py-5">
+    <div class="container">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-8">
+          <h1 class="display-6 fw-bold mb-3">{% trans "Loan EMI Calculator" %}</h1>
+          <p class="lead mb-3">{% trans "Calculate your monthly EMI, total interest payout, and month-end loan outgo in seconds. Built for home loan, car loan, education loan, and personal loan planning." %}</p>
+        </div>
+        <div class="d-none d-md-block col-lg-4">
+          <div class="calc-panel p-4">
+            <div class="kpi-label mb-1">{% trans "Example EMI" %}</div>
+            <div class="kpi-value" id="hero-emi">₹{{ default_emi|floatformat:2 }}</div>
+            <div class="text-secondary small">{% trans "for ₹10,00,000 at 10.5% for 60 months" %}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="py-5">
+    <div class="container">
+      <div class="row g-4">
+        <section class="col-lg-6">
+          <div class="calc-panel p-4 h-100">
+            <h2 class="h4 fw-bold mb-3">{% trans "Calculator Inputs" %}</h2>
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="principal">{% trans "Loan Amount (Principal)" %}</label>
+              <input class="form-control" id="principal" type="number" min="1" step="1000" value="{{ default_principal }}">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="annualRate">{% trans "Annual Interest Rate (%)" %}</label>
+              <input class="form-control" id="annualRate" type="number" min="0" step="0.01" value="{{ default_rate }}">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="tenureMonths">{% trans "Loan Tenure (Months)" %}</label>
+              <input class="form-control" id="tenureMonths" type="number" min="1" step="1" value="{{ default_months }}">
+            </div>
+            <div class="mb-0">
+              <label class="form-label fw-semibold" for="extraPayment">{% trans "Optional Monthly Prepayment" %}</label>
+              <input class="form-control" id="extraPayment" type="number" min="0" step="100" value="0">
+            </div>
+          </div>
+        </section>
+
+        <section class="col-lg-6">
+          <div class="calc-panel p-4 h-100">
+            <h2 class="h4 fw-bold mb-3">{% trans "Loan Summary" %}</h2>
+            <div class="row g-3 mb-3">
+              <div class="col-12">
+                <div class="result-card p-3">
+                  <div class="kpi-label">{% trans "Monthly EMI" %}</div>
+                  <div class="kpi-value" id="emiValue">₹{{ default_emi|floatformat:2 }}</div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="result-card p-3 h-100">
+                  <div class="kpi-label">{% trans "Total Payment" %}</div>
+                  <div class="fw-bold fs-4" id="totalPayment">₹{{ default_total_payment|floatformat:2 }}</div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="result-card p-3 h-100">
+                  <div class="kpi-label">{% trans "Total Interest" %}</div>
+                  <div class="fw-bold fs-4" id="totalInterest">₹{{ default_total_interest|floatformat:2 }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="result-card p-3 mb-3">
+              <div class="kpi-label">{% trans "With Prepayment" %}</div>
+              <div class="small text-secondary mb-1">{% trans "Estimated revised tenure" %}: <span id="revisedTenure" class="fw-semibold text-dark">{{ default_months }} {% trans "months" %}</span></div>
+              <div class="small text-secondary">{% trans "Estimated interest saved" %}: <span id="interestSaved" class="fw-semibold text-dark">₹0.00</span></div>
+            </div>
+
+            <div class="formula-box small text-secondary">
+              <div class="fw-semibold text-dark mb-1">{% trans "Formula used" %}</div>
+              <div>EMI = P × r × (1+r)<sup>n</sup> / ((1+r)<sup>n</sup> - 1)</div>
+              <div class="mt-1">{% trans "Same standard EMI logic used inside TrackMyRupee's loan module." %}</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="mt-5 calc-panel p-4">
+        <h2 class="h4 fw-bold mb-3">{% trans "Amortization Preview" %}</h2>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th>{% trans "Month" %}</th>
+                <th class="text-end">{% trans "EMI" %}</th>
+                <th class="text-end">{% trans "Principal" %}</th>
+                <th class="text-end">{% trans "Interest" %}</th>
+                <th class="text-end">{% trans "Balance" %}</th>
+              </tr>
+            </thead>
+            <tbody id="amortRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="seo-copy mt-5">
+        <div class="row g-4">
+          <div class="col-lg-8">
+            <h2>{% trans "How This EMI Calculator Helps You Plan Better" %}</h2>
+            <p>{% trans "Before taking a loan, compare EMI affordability against your monthly budget. This calculator shows your fixed EMI, total amount repaid, and total interest outgo so you can avoid over-borrowing." %}</p>
+            <p>{% trans "For existing borrowers, the monthly prepayment field shows how quickly you can close the loan and how much interest you can potentially save." %}</p>
+
+            <h2 class="mt-4">{% trans "Best Use Cases" %}</h2>
+            <ul>
+              <li>{% trans "Home loan EMI planning" %}</li>
+              <li>{% trans "Car and bike loan affordability check" %}</li>
+              <li>{% trans "Personal loan comparison across banks" %}</li>
+              <li>{% trans "Prepayment strategy simulation" %}</li>
+            </ul>
+
+            <h2 class="mt-4">{% trans "FAQ" %}</h2>
+            <p><strong>{% trans "Is this EMI calculator free?" %}</strong><br>{% trans "Yes, it is free and public." %}</p>
+            <p><strong>{% trans "Can I use it for reducing-balance loans?" %}</strong><br>{% trans "Yes. The EMI formula and amortization preview are based on reducing balance logic." %}</p>
+            <p><strong>{% trans "Will actual bank EMI differ?" %}</strong><br>{% trans "Slightly, due to lender-specific rounding, processing fees, and payment date conventions." %}</p>
+          </div>
+          <div class="col-lg-4">
+            <div class="calc-panel p-4">
+              <h3 class="h5 fw-bold">{% trans "Track EMI Payments" %}</h3>
+              <p class="text-secondary">{% trans "Use TrackMyRupee to track real repayments, changing interest rates, and principal closure progress." %}</p>
+              <div class="d-flex gap-2 flex-nowrap">
+                <a href="{% url 'account_signup' %}" class="btn flex-fill text-white text-nowrap" style="background: var(--tmr-teal-400);">{% trans "Start Free" %}</a>
+                <a href="{% url 'demo_login' %}" class="btn btn-outline-secondary flex-fill text-nowrap">{% trans "See live demo" %} &rarr;</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  {% include "components/public_footer.html" with is_landing=False %}
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu');
+      const hamburger = document.getElementById('hamburger-btn');
+      if (!menu || !hamburger) return;
+      menu.classList.toggle('active');
+      hamburger.classList.toggle('active');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const hamburger = document.getElementById('hamburger-btn');
+      if (hamburger) {
+        hamburger.addEventListener('click', toggleMenu);
+      }
+    });
+
+    function formatINR(value) {
+      const num = Number(value || 0);
+      return '₹' + num.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+    }
+
+    function calculateEMI(principal, annualRate, months) {
+      if (principal <= 0 || months <= 0) return 0;
+      if (annualRate === 0) return principal / months;
+      const r = annualRate / 12 / 100;
+      const factor = Math.pow(1 + r, months);
+      return principal * r * factor / (factor - 1);
+    }
+
+    function amortize(principal, annualRate, months, emi, maxRows, monthlyExtra) {
+      const rows = [];
+      let balance = principal;
+      const r = annualRate / 12 / 100;
+      let totalInterest = 0;
+      let month = 0;
+
+      while (balance > 0.01 && month < 1200) {
+        month += 1;
+        const interest = annualRate === 0 ? 0 : balance * r;
+        let principalPay = emi - interest + monthlyExtra;
+        if (principalPay > balance) principalPay = balance;
+        const paid = principalPay + interest;
+        balance -= principalPay;
+        totalInterest += interest;
+
+        if (rows.length < maxRows) {
+          rows.push({ month, paid, principalPay, interest, balance: Math.max(0, balance) });
+        }
+      }
+
+      return { rows, monthsUsed: month, interestPaid: totalInterest };
+    }
+
+    function updateCalculator() {
+      const principal = Number(document.getElementById('principal').value || 0);
+      const annualRate = Number(document.getElementById('annualRate').value || 0);
+      const months = Number(document.getElementById('tenureMonths').value || 0);
+      const extra = Number(document.getElementById('extraPayment').value || 0);
+
+      const emi = calculateEMI(principal, annualRate, months);
+      const totalPayment = emi * months;
+      const totalInterest = totalPayment - principal;
+
+      document.getElementById('emiValue').textContent = formatINR(emi);
+      document.getElementById('totalPayment').textContent = formatINR(totalPayment);
+      document.getElementById('totalInterest').textContent = formatINR(totalInterest);
+      document.getElementById('hero-emi').textContent = formatINR(emi);
+
+      const baseAmort = amortize(principal, annualRate, months, emi, 12, 0);
+      const prepayAmort = amortize(principal, annualRate, months, emi, 12, Math.max(0, extra));
+
+      const revisedTenure = prepayAmort.monthsUsed;
+      const interestSaved = Math.max(0, baseAmort.interestPaid - prepayAmort.interestPaid);
+      document.getElementById('revisedTenure').textContent = revisedTenure + ' {% trans "months" %}';
+      document.getElementById('interestSaved').textContent = formatINR(interestSaved);
+
+      const tbody = document.getElementById('amortRows');
+      tbody.innerHTML = '';
+      prepayAmort.rows.forEach((row) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row.month}</td>
+          <td class="text-end">${formatINR(row.paid)}</td>
+          <td class="text-end">${formatINR(row.principalPay)}</td>
+          <td class="text-end">${formatINR(row.interest)}</td>
+          <td class="text-end">${formatINR(row.balance)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    ['principal', 'annualRate', 'tenureMonths', 'extraPayment'].forEach((id) => {
+      document.getElementById(id).addEventListener('input', updateCalculator);
+    });
+
+    updateCalculator();
+  </script>
+</body>
+</html>

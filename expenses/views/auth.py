@@ -21,6 +21,7 @@ from ..models import (
     SubscriptionPlan,
     UserProfile,
 )
+from ..services import LoanService
 
 
 class OnboardingView(LoginRequiredMixin, TemplateView):
@@ -290,6 +291,28 @@ class FeaturesPageView(TemplateView):
                 ]
             },
         ]
+        return context
+
+
+class LoanEMICalculatorPageView(TemplateView):
+    template_name = 'loan_emi_calculator.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        default_principal = 1000000
+        default_rate = 10.5
+        default_months = 60
+        default_emi = LoanService.calculate_emi(default_principal, default_rate, default_months)
+
+        context.update({
+            'default_principal': default_principal,
+            'default_rate': default_rate,
+            'default_months': default_months,
+            'default_emi': default_emi,
+            'default_total_payment': default_emi * default_months,
+            'default_total_interest': (default_emi * default_months) - default_principal,
+        })
         return context
 
 def demo_login(request):

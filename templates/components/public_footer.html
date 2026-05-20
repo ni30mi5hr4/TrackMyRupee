@@ -1,0 +1,61 @@
+{% load i18n %}
+{% load static %}
+<footer class="landing-footer pt-5 pb-3">
+    <div class="container">
+        <div class="row g-4 justify-content-between">
+            <div class="col-lg-4">
+                <div class="footer-brand">
+                    <a class="mb-3 d-inline-flex align-items-center gap-2 text-decoration-none fw-bold fs-5 text-dark" href="{% url 'landing' %}">
+                        <img src="{% static 'icon.svg' %}" alt="TrackMyRupee Logo" width="24" height="24">
+                        <span>TrackMyRupee</span>
+                    </a>
+                    <p style="font-size: 14px; color: var(--tmr-ink-600); line-height: 1.6;">{% blocktrans %}A privacy-first personal finance dashboard for Indian salaried professionals.{% endblocktrans %}</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <h4 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px;">{% trans "Product" %}</h4>
+                <ul class="list-unstyled d-flex flex-column gap-2" style="font-size: 14px;">
+                    {% if is_landing %}
+                    <li><a href="#features" class="text-decoration-none text-muted">{% trans "Features" %}</a></li>
+                    <li><a href="#networth" class="text-decoration-none text-muted">{% trans "Net Worth" %}</a></li>
+                    <li><a href="#pricing" class="text-decoration-none text-muted">{% trans "Pricing" %}</a></li>
+                    {% else %}
+                    <li><a href="{% url 'landing' %}#features" class="text-decoration-none text-muted">{% trans "Features" %}</a></li>
+                    <li><a href="{% url 'landing' %}#networth" class="text-decoration-none text-muted">{% trans "Net Worth" %}</a></li>
+                    <li><a href="{% url 'landing' %}#pricing" class="text-decoration-none text-muted">{% trans "Pricing" %}</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'loan-emi-calculator' %}" class="text-decoration-none text-muted">{% trans "Loan EMI Calculator" %}</a></li>
+                    <li><a href="{% url 'demo_login' %}" class="text-decoration-none text-muted">{% trans "Live Demo" %}</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <h4 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px;">{% trans "Company" %}</h4>
+                <ul class="list-unstyled d-flex flex-column gap-2" style="font-size: 14px;">
+                    <li><a href="{% url 'about' %}" class="text-decoration-none text-muted">{% trans "About" %}</a></li>
+                    <li><a href="{% url 'contact' %}" class="text-decoration-none text-muted">{% trans "Contact" %}</a></li>
+                    <li><a href="{% url 'blog_list' %}" class="text-decoration-none text-muted">{% trans "Blog" %}</a></li>
+                    <li><a href="https://rzp.io/rzp/AP7kBG2" class="text-decoration-none text-muted">{% trans "Support Us" %}</a></li>
+                </ul>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <h4 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px;">{% trans "Legal" %}</h4>
+                <ul class="list-unstyled d-flex flex-column gap-2" style="font-size: 14px;">
+                    <li><a href="{% url 'privacy-policy' %}" class="text-decoration-none text-muted">{% trans "Privacy" %}</a></li>
+                    <li><a href="{% url 'terms-of-service' %}" class="text-decoration-none text-muted">{% trans "Terms" %}</a></li>
+                    <li><a href="{% url 'security' %}" class="text-decoration-none text-muted">{% trans "Security" %}</a></li>
+                </ul>
+            </div>
+        </div>
+        <hr class="my-4 opacity-10">
+        <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <p class="mb-0" style="font-size: 13px; color: var(--tmr-ink-400);">&copy; {% now "Y" %} TrackMyRupee. {% trans "Made with care in Pune, India." %}</p>
+            <p class="mb-0 d-flex gap-3" style="font-size: 13px; color: var(--tmr-ink-400);">
+                <span>{% trans "No SMS scraping" %}</span>
+                <span>·</span>
+                <span>{% trans "No bank logins" %}</span>
+                <span>·</span>
+                <span>{% trans "No data selling" %}</span>
+            </p>
+        </div>
+    </div>
+</footer>
